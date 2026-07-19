@@ -4,8 +4,8 @@ const API = 'https://api.jolpi.ca/ergast/f1'
 export type Driver = { id: string; code: string; number: string; givenName: string; familyName: string; nationality: string }
 export type Race = { round: number; name: string; circuit: string; locality: string; country: string; date: string; time: string; qualifyingDate?: string; qualifyingTime?: string }
 
-async function api(path: string) {
-  const res = await fetch(`${API}/${path}`, { next: { revalidate: 3600 } })
+async function api(path: string, revalidate = 3600) {
+  const res = await fetch(`${API}/${path}`, { next: { revalidate } })
   if (!res.ok) throw new Error('F1 data is temporarily unavailable')
   return res.json()
 }
@@ -33,7 +33,7 @@ export function sessionStart(race: Race, type: 'qualifying' | 'race') {
 export async function getOfficialResults(round: number, type: 'qualifying' | 'race') {
   const endpoint = type === 'qualifying' ? 'qualifying' : 'results'
   try {
-    const data = await api(`${SEASON}/${round}/${endpoint}.json`)
+    const data = await api(`${SEASON}/${round}/${endpoint}.json`, 300)
     const race = data.MRData.RaceTable.Races?.[0]
     const rows = type === 'qualifying' ? race?.QualifyingResults : race?.Results
     return (rows ?? []).slice(0, 10).map((r: any) => r.Driver.driverId) as string[]
