@@ -1,9 +1,12 @@
 import { db } from '@/lib/db'
 import { eventResults, predictions } from '@/lib/db/schema'
-import { getOfficialResults, SEASON } from '@/lib/f1'
+import { getOfficialResults, SEASON, type SessionType } from '@/lib/f1'
 import { and, eq } from 'drizzle-orm'
 
-export async function scoreRound(round: number, type: 'qualifying' | 'race') {
+const SCORABLE: SessionType[] = ['qualifying', 'race', 'sprint']
+
+export async function scoreRound(round: number, type: SessionType) {
+  if (!SCORABLE.includes(type)) return { scored: 0, message: `No official results source for session type '${type}'` }
   const official = await getOfficialResults(round, type)
   if (official.length !== 10) {
     console.error(`scoreRound: round ${round} ${type} — got ${official.length}/10 official results`)
