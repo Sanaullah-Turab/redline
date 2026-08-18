@@ -92,6 +92,7 @@ export function PredictionPicker({ drivers, round, isSprintWeekend, initialQuali
       })}
     </div>
     {locked && <div className="lock-banner">This session has started. Predictions are now locked.</div>}
+    {!locked && tab === 'sprint-qualifying' && <div className="practice-banner"><Zap aria-hidden="true" />Practice round. No points scored here, but see how well you can call the shootout.</div>}
     <div className="prediction-layout">
       <section className="panel">
         <div className="panel-heading">
