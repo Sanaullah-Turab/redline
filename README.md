@@ -1,6 +1,6 @@
 # Redline: F1 Prediction Game
 
-This repository contains **Redline**, a Formula 1 prediction game built with Next.js. Users can sign in, view the F1 schedule, and drag-and-drop to predict the top 10 finishers for upcoming qualifying and race sessions. The app automatically fetches official results and scores user predictions.
+Redline is a Formula 1 prediction game built with Next.js. Users can sign in, view the F1 schedule, and drag-and-drop to predict the top 10 finishers for upcoming qualifying, race, sprint qualifying, and sprint sessions. The app automatically fetches official results and scores user predictions.
 
 This README is designed to give developers (and AI agents) a comprehensive overview of the architecture, stack, and file structure so you can jump straight into building or modifying features.
 
@@ -10,7 +10,7 @@ Live at: [redlinef1.vercel.app](https://redlinef1.vercel.app)
 
 - **Framework**: [Next.js 16.2.6](https://nextjs.org/) (App Router)
 - **Package Manager**: pnpm
-- **Styling & UI**: [Tailwind CSS 4](https://tailwindcss.com/), [Shadcn UI](https://ui.shadcn.com/), Lucide React
+- **Styling and UI**: [Tailwind CSS 4](https://tailwindcss.com/), [Shadcn UI](https://ui.shadcn.com/), Lucide React
 - **Authentication**: [Better Auth](https://better-auth.com/)
 - **Database**: PostgreSQL (hosted on [Supabase](https://supabase.com/)), managed via [Drizzle ORM](https://orm.drizzle.team/)
 - **Interactivity**: `@dnd-kit` for drag-and-drop prediction lists
@@ -33,8 +33,8 @@ Live at: [redlinef1.vercel.app](https://redlinef1.vercel.app)
 │   ├── sign-in/              # Login page
 │   ├── sign-up/              # Registration page
 │   └── globals.css           # Tailwind entrypoint and CSS variables
-├── components/             # Reusable UI components (Shadcn UI & custom)
-├── lib/                    # Core application logic & configuration
+├── components/             # Reusable UI components (Shadcn UI and custom)
+├── lib/                    # Core application logic and configuration
 │   ├── db/                  # Database config (index.ts) and Drizzle schema (schema.ts)
 │   ├── auth.ts                # Better Auth configuration
 │   ├── f1.ts                   # External F1 API fetching (Schedule, Drivers, Results)
@@ -60,11 +60,11 @@ The database is PostgreSQL. Drizzle ORM is used for queries and schema declarati
 
 ### Domain Tables
 - **`predictions`**: Stores a user's prediction for a specific session.
-  - Fields: `id`, `userId`, `season`, `round`, `sessionType` ('qualifying' | 'race'), `positions` (JSONB array of driver IDs), `points` (integer), `scored` (boolean).
-  - *Unique Constraint*: A user can only have one prediction per `[season, round, sessionType]`.
+  - Fields: `id`, `userId`, `season`, `round`, `sessionType` ('qualifying' | 'race' | 'sprint-qualifying' | 'sprint'), `positions` (JSONB array of driver IDs), `points` (integer), `scored` (boolean).
+  - Unique Constraint: A user can only have one prediction per `[season, round, sessionType]`.
 - **`event_results`**: Caches the official top 10 results once a session concludes.
   - Fields: `id`, `season`, `round`, `sessionType`, `positions` (JSONB array).
-  - *Unique Constraint*: Only one result per `[season, round, sessionType]`.
+  - Unique Constraint: Only one result per `[season, round, sessionType]`.
 
 **Row Level Security (RLS)** is enabled on all tables. This blocks Supabase's auto-generated Data API from reading or writing directly. The app itself connects via a direct Postgres connection through Drizzle, which bypasses RLS as the table owner, so this only closes off the separate public API layer.
 
@@ -74,14 +74,18 @@ The database is PostgreSQL. Drizzle ORM is used for queries and schema declarati
 
 ### 1. F1 Data Fetching (`lib/f1.ts`)
 The app does not store the entire F1 driver roster or schedule in the database. Instead, it dynamically fetches them from `api.jolpi.ca/ergast/f1`.
-- `getSchedule()`: Retrieves the race calendar for the current season.
+- `getSchedule()`: Retrieves the race calendar for the current season, including sprint session dates where applicable.
 - `getDrivers()`: Retrieves the driver lineup.
 - `getOfficialResults(round, type)`: Fetches the top 10 finishers to be used for scoring.
+- `isSprint(race)`: Returns true if a race weekend includes sprint sessions.
+- `sessionStart(race, type)`: Returns the start time for any of the four session types.
 
 ### 2. Predictions (`app/predict/`)
-Users navigate to a specific race and select a session (`qualifying` or `race`). They are presented with a drag-and-drop interface powered by `@dnd-kit`. When saved, the ordered list of driver IDs is stored in the `predictions` table as a JSONB array.
+Users navigate to a specific race and select a session. On standard weekends, two tabs are shown: Qualifying and Race. On sprint weekends, four tabs are shown in chronological order: Sprint Qualifying, Sprint, Qualifying, and Race. They are presented with a drag-and-drop interface powered by `@dnd-kit`. When saved, the ordered list of driver IDs is stored in the `predictions` table as a JSONB array.
 
-### 3. Scoring (`lib/scoring.ts` & `app/api/cron-score/`)
+Sprint Qualifying predictions are accepted but do not earn points, as no official results API exists for that session. A notice is shown on that tab so users are aware.
+
+### 3. Scoring (`lib/scoring.ts` and `app/api/cron-score/`)
 Once a session concludes:
 1. `scoreRound(round, type)` is executed.
 2. It fetches the official top 10 from the Ergast API.
@@ -140,3 +144,9 @@ Note: if your database password contains special characters (e.g. `@`, `#`, `%`)
 - **Styling**: Always use Tailwind utility classes. If a complex component is needed, check if a Shadcn component exists in `components/ui` or can be added via `npx shadcn@latest add <component>`.
 - **Authentication**: Auth state is accessed via Better Auth (`auth.api.getSession` on the server, `useSession` on the client). Avoid writing custom JWT/Cookie logic; rely on Better Auth primitives.
 - **RLS**: Tables have RLS enabled with no policies for the Data API. This is intentional and should not be relaxed without a clear reason, since the app does not use the Supabase client or Data API at all.
+
+## License
+
+Copyright (c) 2026 Sanaullah Turab. All rights reserved.
+
+This project is not open source. The source code is made available for educational and contribution purposes only. You may study the code and submit contributions, but you may not use it commercially, redistribute it, or deploy it publicly without written permission. See the [LICENSE](./LICENSE) file for full terms.
