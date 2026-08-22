@@ -14,7 +14,7 @@ Live at: [redlinef1.vercel.app](https://redlinef1.vercel.app)
 - **Authentication**: [Better Auth](https://better-auth.com/)
 - **Database**: PostgreSQL (hosted on [Supabase](https://supabase.com/)), managed via [Drizzle ORM](https://orm.drizzle.team/)
 - **Interactivity**: `@dnd-kit` for drag-and-drop prediction lists
-- **External Data**: Jolpi Ergast F1 API (`https://api.jolpi.ca/ergast/f1`) for schedules, drivers, and race results
+- **External Data**: Jolpi Ergast F1 API (`https://api.jolpi.ca/ergast/f1`) for schedules and race results. The 2026 driver roster is hardcoded in `lib/f1.ts` (the API's 2026 data is incomplete — missing drivers, including reserve/test entries).
 - **Hosting**: Vercel
 - **Scoring Automation**: GitHub Actions (scheduled workflow, every 30 minutes)
 
@@ -73,9 +73,9 @@ The database is PostgreSQL. Drizzle ORM is used for queries and schema declarati
 ## Core Workflows
 
 ### 1. F1 Data Fetching (`lib/f1.ts`)
-The app does not store the entire F1 driver roster or schedule in the database. Instead, it dynamically fetches them from `api.jolpi.ca/ergast/f1`.
+The app does not store the race schedule or official results in the database. Instead, it dynamically fetches them from `api.jolpi.ca/ergast/f1`.
 - `getSchedule()`: Retrieves the race calendar for the current season, including sprint session dates where applicable.
-- `getDrivers()`: Retrieves the driver lineup.
+- `getDrivers()`: Returns the **hardcoded** 2026 driver roster (`DRIVERS_2026`). The Ergast API was not used here because its 2026 data is incomplete (e.g. missing Verstappen, including reserve/test drivers with no race seats). Update this array manually if the grid changes mid-season.
 - `getOfficialResults(round, type)`: Fetches the top 10 finishers to be used for scoring.
 - `isSprint(race)`: Returns true if a race weekend includes sprint sessions.
 - `sessionStart(race, type)`: Returns the start time for any of the four session types.
