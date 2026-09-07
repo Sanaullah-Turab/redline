@@ -9,10 +9,10 @@ import { revalidatePath } from 'next/cache'
 
 const VALID_TYPES: SessionType[] = ['qualifying', 'race', 'sprint-qualifying', 'sprint']
 
-async function userId() { const session = await auth.api.getSession({ headers: await headers() }); if (!session?.user) throw new Error('Please sign in'); return session.user.id }
+async function getUser() { const session = await auth.api.getSession({ headers: await headers() }); if (!session?.user) throw new Error('Please sign in'); return { id: session.user.id, name: session.user.name } }
 
 export async function savePrediction(round: number, type: SessionType, positions: string[]) {
-  const id = await userId()
+  const { id, name: userName } = await getUser()
   if (!Number.isInteger(round) || !VALID_TYPES.includes(type)) throw new Error('Invalid prediction')
   const [schedule, drivers] = await Promise.all([getSchedule(), getDrivers()])
   const event = schedule.find((race) => race.round === round)
@@ -21,13 +21,15 @@ export async function savePrediction(round: number, type: SessionType, positions
   if (new Date() >= sessionStart(event, type)) throw new Error('Predictions are locked for this session')
   const valid = new Set(drivers.map((driver) => driver.id))
   if (positions.length !== 10 || new Set(positions).size !== 10 || positions.some((position) => !valid.has(position))) throw new Error('Choose 10 unique drivers')
-  await db.insert(predictions).values({ userId: id, season: SEASON, round, sessionType: type, positions, updatedAt: new Date() }).onConflictDoUpdate({ target: [predictions.userId, predictions.season, predictions.round, predictions.sessionType], set: { positions, points: 0, scored: false, updatedAt: new Date() } })
+  await db.insert(predictions).values({ userId: id, userName, season: SEASON, round, sessionType: type, positions, updatedAt: new Date() }).onConflictDoUpdate({ target: [predictions.userId, predictions.season, predictions.round, predictions.sessionType], set: { positions, userName, points: 0, scored: false, updatedAt: new Date() } })
   revalidatePath(`/predict/${round}`); revalidatePath('/')
   return { ok: true }
 }
 
 export async function getMyPrediction(round: number, type: SessionType) {
-  const id = await userId()
-  const rows = await db.select().from(predictions).where(and(eq(predictions.userId, id), eq(predictions.season, SEASON), eq(predictions.round, round), eq(predictions.sessionType, type))).limit(1)
-  return rows[0] ?? null
+  const { id } = await getUser()
+  const row = await db.query.predictions.findFirst({
+    where: and(eq(predictions.userId, id), eq(predictions.season, SEASON), eq(predictions.round, round), eq(predictions.sessionType, type)),
+  })
+  return row ?? null
 }
