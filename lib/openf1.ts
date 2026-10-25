@@ -1,4 +1,5 @@
 import { type Race, type SessionType } from '@/lib/f1'
+import { mapOpenF1Driver } from '@/lib/driver-mapping'
 
 const OPENF1_API = 'https://api.openf1.org/v1'
 
@@ -109,4 +110,26 @@ export async function resolveOpenF1Session(year: number, sessionType: SessionTyp
     if (locationMatches) return s
   }
   return null
+}
+
+export async function getOpenF1OfficialResults(season: number, round: number, sessionType: SessionType, race: Race): Promise<string[]> {
+  const session = await resolveOpenF1Session(season, sessionType, race)
+  if (!session) return []
+  const raw = await getOpenF1SessionResults(session.session_key)
+  if (!raw || raw.length === 0) return []
+  const classified = raw.filter((r) => r.position != null && Number(r.position) >= 1)
+  classified.sort((a, b) => Number(a.position) - Number(b.position))
+  if (classified.length < 10) return []
+  const drivers = await getOpenF1Drivers(session.session_key)
+  const driverByNum = new Map(drivers.map((d) => [Number(d.driver_number), d]))
+  const top10: string[] = []
+  for (let pos = 1; pos <= 10; pos++) {
+    const item = classified.find((r) => Number(r.position) === pos)
+    if (!item) return []
+    const dMeta = driverByNum.get(Number(item.driver_number))
+    const mappedId = mapOpenF1Driver(item.driver_number, dMeta?.name_acronym)
+    if (!mappedId) return []
+    top10.push(mappedId)
+  }
+  return top10
 }

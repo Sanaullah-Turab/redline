@@ -1,3 +1,6 @@
+import { normalizeDriverId } from '@/lib/driver-mapping'
+import { getOpenF1OfficialResults } from '@/lib/openf1'
+
 export const SEASON = 2026
 const API = 'https://api.jolpi.ca/ergast/f1'
 
@@ -92,19 +95,31 @@ export function sessionStart(race: Race, type: SessionType) {
   }
 }
 
-export async function getOfficialResults(season: number, round: number, type: SessionType) {
+export async function getOfficialResults(season: number, round: number, type: SessionType): Promise<string[]> {
   try {
     let endpoint = ''
     if (type === 'qualifying') endpoint = `${season}/${round}/qualifying.json`
     else if (type === 'race') endpoint = `${season}/${round}/results.json`
     else if (type === 'sprint') endpoint = `${season}/${round}/sprint.json`
-    else return []
-    const res = await api(endpoint)
-    if (!res.ok || !res.data) return []
-    const race = res.data.MRData?.RaceTable?.Races?.[0]
-    if (!race) return []
-    const rows: any[] = (type === 'qualifying' ? race.QualifyingResults : type === 'race' ? race.Results : race.SprintResults) ?? []
-    return rows.slice(0, 10).map((r: any) => r.Driver?.driverId).filter(Boolean) as string[]
+
+    if (endpoint) {
+      const res = await api(endpoint)
+      if (res.ok && res.data) {
+        const race = res.data.MRData?.RaceTable?.Races?.[0]
+        if (race) {
+          const rows: any[] = (type === 'qualifying' ? race.QualifyingResults : type === 'race' ? race.Results : race.SprintResults) ?? []
+          if (rows.length >= 10) {
+            const top10 = rows.slice(0, 10).map((r: any) => normalizeDriverId(r.Driver?.driverId)).filter(Boolean)
+            if (top10.length === 10) return top10
+          }
+        }
+      }
+    }
+
+    const schedule = await getSchedule(season)
+    const event = schedule.find((r) => r.round === round)
+    if (!event) return []
+    return await getOpenF1OfficialResults(season, round, type, event)
   } catch {
     return []
   }
