@@ -81,17 +81,17 @@ export function sessionStart(race: Race, type: SessionType) {
   }
 }
 
-export async function getOfficialResults(round: number, type: SessionType) {
+export async function getOfficialResults(season: number, round: number, type: SessionType) {
   try {
     let rows: any[]
     if (type === 'qualifying') {
-      const data = await api(`${SEASON}/${round}/qualifying.json`)
+      const data = await api(`${season}/${round}/qualifying.json`)
       rows = data.MRData.RaceTable.Races?.[0]?.QualifyingResults ?? []
     } else if (type === 'race') {
-      const data = await api(`${SEASON}/${round}/results.json`)
+      const data = await api(`${season}/${round}/results.json`)
       rows = data.MRData.RaceTable.Races?.[0]?.Results ?? []
     } else if (type === 'sprint') {
-      const data = await api(`${SEASON}/${round}/sprint.json`)
+      const data = await api(`${season}/${round}/sprint.json`)
       rows = data.MRData.RaceTable.Races?.[0]?.SprintResults ?? []
     } else {
       return []
