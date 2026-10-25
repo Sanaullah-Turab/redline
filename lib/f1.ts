@@ -100,7 +100,7 @@ export type OfficialResult = {
   allClassified: string[]
 }
 
-export async function getOfficialResults(season: number, round: number, type: SessionType): Promise<OfficialResult | null> {
+export async function getOfficialResults(season: number, round: number, type: SessionType, raceEvent?: Race): Promise<OfficialResult | null> {
   try {
     let endpoint = ''
     if (type === 'qualifying') endpoint = `${season}/${round}/qualifying.json`
@@ -111,19 +111,24 @@ export async function getOfficialResults(season: number, round: number, type: Se
       const res = await api(endpoint)
       if (res.ok && res.data) {
         const race = res.data.MRData?.RaceTable?.Races?.[0]
-        if (race) {
-          const rows: any[] = (type === 'qualifying' ? race.QualifyingResults : type === 'race' ? race.Results : race.SprintResults) ?? []
+        if (race && Number(race.season) === season && Number(race.round) === round) {
+          const rawRows: any[] = (type === 'qualifying' ? race.QualifyingResults : type === 'race' ? race.Results : race.SprintResults) ?? []
+          const rows = [...rawRows].sort((a: any, b: any) => (Number(a.position) || 999) - (Number(b.position) || 999))
           if (rows.length >= 10) {
             const positions = rows.slice(0, 10).map((r: any) => normalizeDriverId(r.Driver?.driverId)).filter(Boolean)
             const allClassified = rows.map((r: any) => normalizeDriverId(r.Driver?.driverId)).filter(Boolean)
-            if (positions.length === 10) return { positions, allClassified }
+            if (positions.length === 10 && new Set(positions).size === 10) return { positions, allClassified }
           }
         }
       }
     }
 
-    const schedule = await getSchedule(season)
-    const event = schedule.find((r) => r.round === round)
+    if (season !== SEASON) return null
+    let event = raceEvent
+    if (!event) {
+      const schedule = await getSchedule(season)
+      event = schedule.find((r) => r.round === round)
+    }
     if (!event) return null
     return await getOpenF1OfficialResults(season, round, type, event)
   } catch {

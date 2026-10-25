@@ -115,6 +115,10 @@ export async function resolveOpenF1Session(year: number, sessionType: SessionTyp
 export async function getOpenF1OfficialResults(season: number, round: number, sessionType: SessionType, race: Race): Promise<{ positions: string[]; allClassified: string[] } | null> {
   const session = await resolveOpenF1Session(season, sessionType, race)
   if (!session) return null
+  if (session.date_end) {
+    const endMs = new Date(session.date_end).getTime()
+    if (Number.isNaN(endMs) || Date.now() < endMs + 20 * 60 * 1000) return null
+  }
   const raw = await getOpenF1SessionResults(session.session_key)
   if (!raw || raw.length === 0) return null
   const classified = raw.filter((r) => r.position != null && Number(r.position) >= 1)
@@ -131,6 +135,7 @@ export async function getOpenF1OfficialResults(season: number, round: number, se
     if (!mappedId) return null
     positions.push(mappedId)
   }
+  if (new Set(positions).size !== 10) return null
   const allClassified = raw
     .map((r) => {
       const dMeta = driverByNum.get(Number(r.driver_number))
