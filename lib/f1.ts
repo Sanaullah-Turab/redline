@@ -100,38 +100,70 @@ export type OfficialResult = {
   allClassified: string[]
 }
 
-export async function getOfficialResults(season: number, round: number, type: SessionType, raceEvent?: Race): Promise<OfficialResult | null> {
+export type OfficialResultOutcome = {
+  result: OfficialResult | null
+  pendingReason?: string
+}
+
+export async function getOfficialResults(season: number, round: number, type: SessionType, raceEvent?: Race): Promise<OfficialResultOutcome> {
   try {
     let endpoint = ''
     if (type === 'qualifying') endpoint = `${season}/${round}/qualifying.json`
     else if (type === 'race') endpoint = `${season}/${round}/results.json`
     else if (type === 'sprint') endpoint = `${season}/${round}/sprint.json`
 
+    let jolpicaOutcome = ''
     if (endpoint) {
       const res = await api(endpoint)
-      if (res.ok && res.data) {
+      if (!res.ok) {
+        jolpicaOutcome = String(res.status || 'error')
+      } else if (res.data) {
         const race = res.data.MRData?.RaceTable?.Races?.[0]
-        if (race && Number(race.season) === season && Number(race.round) === round) {
+        if (!race || Number(race.season) !== season || Number(race.round) !== round) {
+          jolpicaOutcome = 'empty result'
+        } else {
           const rawRows: any[] = (type === 'qualifying' ? race.QualifyingResults : type === 'race' ? race.Results : race.SprintResults) ?? []
           const rows = [...rawRows].sort((a: any, b: any) => (Number(a.position) || 999) - (Number(b.position) || 999))
           if (rows.length >= 10) {
             const positions = rows.slice(0, 10).map((r: any) => normalizeDriverId(r.Driver?.driverId)).filter(Boolean)
             const allClassified = rows.map((r: any) => normalizeDriverId(r.Driver?.driverId)).filter(Boolean)
-            if (positions.length === 10 && new Set(positions).size === 10) return { positions, allClassified }
+            if (positions.length === 10 && new Set(positions).size === 10) return { result: { positions, allClassified } }
+            jolpicaOutcome = 'incomplete result'
+          } else {
+            jolpicaOutcome = 'empty result'
           }
         }
+      } else {
+        jolpicaOutcome = 'empty result'
       }
+    } else {
+      jolpicaOutcome = 'no endpoint'
     }
 
-    if (season !== SEASON) return null
+    if (season !== SEASON) {
+      return { result: null, pendingReason: `Jolpica ${jolpicaOutcome}; OpenF1 not supported for season ${season}` }
+    }
+
     let event = raceEvent
     if (!event) {
       const schedule = await getSchedule(season)
       event = schedule.find((r) => r.round === round)
     }
-    if (!event) return null
-    return await getOpenF1OfficialResults(season, round, type, event)
+
+    if (!event) {
+      return { result: null, pendingReason: `Jolpica ${jolpicaOutcome}; OpenF1 session not resolved (0 classified)` }
+    }
+
+    const openF1 = await getOpenF1OfficialResults(season, round, type, event)
+    if (openF1.result) return { result: openF1.result }
+
+    const openF1Part = openF1.resolved
+      ? `OpenF1 session ${openF1.sessionKey} resolved (${openF1.classifiedCount} classified)`
+      : `OpenF1 session not resolved (${openF1.classifiedCount} classified)`
+    const pendingReason = `Jolpica ${jolpicaOutcome}; ${openF1Part}`
+
+    return { result: null, pendingReason }
   } catch {
-    return null
+    return { result: null, pendingReason: 'Error fetching official results' }
   }
 }

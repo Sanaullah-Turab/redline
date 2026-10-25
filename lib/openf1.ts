@@ -112,35 +112,43 @@ export async function resolveOpenF1Session(year: number, sessionType: SessionTyp
   return null
 }
 
-export async function getOpenF1OfficialResults(season: number, round: number, sessionType: SessionType, race: Race): Promise<{ positions: string[]; allClassified: string[] } | null> {
+export type OpenF1ResultOutcome = {
+  result: { positions: string[]; allClassified: string[] } | null
+  resolved: boolean
+  sessionKey?: number
+  classifiedCount: number
+}
+
+export async function getOpenF1OfficialResults(season: number, round: number, sessionType: SessionType, race: Race): Promise<OpenF1ResultOutcome> {
   const session = await resolveOpenF1Session(season, sessionType, race)
-  if (!session) return null
+  if (!session) return { result: null, resolved: false, classifiedCount: 0 }
   if (session.date_end) {
     const endMs = new Date(session.date_end).getTime()
-    if (Number.isNaN(endMs) || Date.now() < endMs + 20 * 60 * 1000) return null
+    if (Number.isNaN(endMs) || Date.now() < endMs) return { result: null, resolved: true, sessionKey: session.session_key, classifiedCount: 0 }
   }
   const raw = await getOpenF1SessionResults(session.session_key)
-  if (!raw || raw.length === 0) return null
+  if (!raw || raw.length === 0) return { result: null, resolved: true, sessionKey: session.session_key, classifiedCount: 0 }
   const classified = raw.filter((r) => r.position != null && Number(r.position) >= 1)
   classified.sort((a, b) => Number(a.position) - Number(b.position))
-  if (classified.length < 10) return null
+  const classifiedCount = classified.length
+  if (classifiedCount < 10) return { result: null, resolved: true, sessionKey: session.session_key, classifiedCount }
   const drivers = await getOpenF1Drivers(session.session_key)
   const driverByNum = new Map(drivers.map((d) => [Number(d.driver_number), d]))
   const positions: string[] = []
   for (let pos = 1; pos <= 10; pos++) {
     const item = classified.find((r) => Number(r.position) === pos)
-    if (!item) return null
+    if (!item) return { result: null, resolved: true, sessionKey: session.session_key, classifiedCount }
     const dMeta = driverByNum.get(Number(item.driver_number))
     const mappedId = mapOpenF1Driver(item.driver_number, dMeta?.name_acronym)
-    if (!mappedId) return null
+    if (!mappedId) return { result: null, resolved: true, sessionKey: session.session_key, classifiedCount }
     positions.push(mappedId)
   }
-  if (new Set(positions).size !== 10) return null
+  if (new Set(positions).size !== 10) return { result: null, resolved: true, sessionKey: session.session_key, classifiedCount }
   const allClassified = raw
     .map((r) => {
       const dMeta = driverByNum.get(Number(r.driver_number))
       return mapOpenF1Driver(r.driver_number, dMeta?.name_acronym)
     })
     .filter((id): id is string => Boolean(id))
-  return { positions, allClassified }
+  return { result: { positions, allClassified }, resolved: true, sessionKey: session.session_key, classifiedCount }
 }

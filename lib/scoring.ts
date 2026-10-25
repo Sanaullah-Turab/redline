@@ -31,10 +31,11 @@ export async function scoreRound(season: number, round: number, type: SessionTyp
     }
   }
 
-  const official = await getOfficialResults(season, round, type, raceEvent)
-  if (!official || official.positions.length !== 10) {
-    return { status: 'pending', reason: 'Official top 10 is not available yet' }
+  const officialOutcome = await getOfficialResults(season, round, type, raceEvent)
+  if (!officialOutcome.result || officialOutcome.result.positions.length !== 10) {
+    return { status: 'pending', reason: officialOutcome.pendingReason || 'Official top 10 is not available yet' }
   }
+  const official = officialOutcome.result
 
   const referencedDrivers = new Set(entries.flatMap((e) => e.positions.map(normalizeDriverId)))
   const isFullClassification = official.allClassified.length >= 20
