@@ -5,16 +5,27 @@ export type Driver = { id: string; code: string; number: string; givenName: stri
 export type Race = { round: number; name: string; circuit: string; locality: string; country: string; date: string; time: string; qualifyingDate?: string; qualifyingTime?: string; sprintDate?: string; sprintTime?: string; sprintQualifyingDate?: string; sprintQualifyingTime?: string }
 export type SessionType = 'qualifying' | 'race' | 'sprint-qualifying' | 'sprint'
 
-async function api(path: string) {
-  const res = await fetch(`${API}/${path}`, { cache: 'no-store' })
-  if (!res.ok) throw new Error('F1 data is temporarily unavailable')
-  return res.json()
+async function api(path: string, timeoutMs = 8000) {
+  try {
+    const res = await fetch(`${API}/${path}`, { cache: 'no-store', signal: AbortSignal.timeout(timeoutMs) })
+    if (!res.ok) return { ok: false, status: res.status, data: null }
+    const text = await res.text()
+    try {
+      return { ok: true, status: res.status, data: JSON.parse(text) }
+    } catch {
+      return { ok: false, status: res.status, data: null }
+    }
+  } catch (err: any) {
+    const isTimeout = err?.name === 'TimeoutError' || err?.name === 'AbortError'
+    return { ok: false, status: isTimeout ? 408 : 0, data: null }
+  }
 }
 
-export async function getSchedule(): Promise<Race[]> {
+export async function getSchedule(season: number = SEASON): Promise<Race[]> {
   try {
-    const data = await api(`${SEASON}.json`)
-    return (data.MRData.RaceTable.Races ?? []).map((r: any) => ({ round: Number(r.round), name: r.raceName, circuit: r.Circuit.circuitName, locality: r.Circuit.Location.locality, country: r.Circuit.Location.country, date: r.date, time: r.time ?? '00:00:00Z', qualifyingDate: r.Qualifying?.date, qualifyingTime: r.Qualifying?.time, sprintDate: r.Sprint?.date, sprintTime: r.Sprint?.time, sprintQualifyingDate: r.SprintQualifying?.date, sprintQualifyingTime: r.SprintQualifying?.time }))
+    const res = await api(`${season}.json`)
+    if (!res.ok || !res.data) return []
+    return (res.data.MRData?.RaceTable?.Races ?? []).map((r: any) => ({ round: Number(r.round), name: r.raceName, circuit: r.Circuit.circuitName, locality: r.Circuit.Location.locality, country: r.Circuit.Location.country, date: r.date, time: r.time ?? '00:00:00Z', qualifyingDate: r.Qualifying?.date, qualifyingTime: r.Qualifying?.time, sprintDate: r.Sprint?.date, sprintTime: r.Sprint?.time, sprintQualifyingDate: r.SprintQualifying?.date, sprintQualifyingTime: r.SprintQualifying?.time }))
   } catch { return [] }
 }
 
@@ -83,22 +94,18 @@ export function sessionStart(race: Race, type: SessionType) {
 
 export async function getOfficialResults(season: number, round: number, type: SessionType) {
   try {
-    let rows: any[]
-    if (type === 'qualifying') {
-      const data = await api(`${season}/${round}/qualifying.json`)
-      rows = data.MRData.RaceTable.Races?.[0]?.QualifyingResults ?? []
-    } else if (type === 'race') {
-      const data = await api(`${season}/${round}/results.json`)
-      rows = data.MRData.RaceTable.Races?.[0]?.Results ?? []
-    } else if (type === 'sprint') {
-      const data = await api(`${season}/${round}/sprint.json`)
-      rows = data.MRData.RaceTable.Races?.[0]?.SprintResults ?? []
-    } else {
-      return []
-    }
-    return rows.slice(0, 10).map((r: any) => r.Driver.driverId) as string[]
-  } catch (err) {
-    console.error(`getOfficialResults failed for round ${round} ${type}:`, err)
+    let endpoint = ''
+    if (type === 'qualifying') endpoint = `${season}/${round}/qualifying.json`
+    else if (type === 'race') endpoint = `${season}/${round}/results.json`
+    else if (type === 'sprint') endpoint = `${season}/${round}/sprint.json`
+    else return []
+    const res = await api(endpoint)
+    if (!res.ok || !res.data) return []
+    const race = res.data.MRData?.RaceTable?.Races?.[0]
+    if (!race) return []
+    const rows: any[] = (type === 'qualifying' ? race.QualifyingResults : type === 'race' ? race.Results : race.SprintResults) ?? []
+    return rows.slice(0, 10).map((r: any) => r.Driver?.driverId).filter(Boolean) as string[]
+  } catch {
     return []
   }
 }
