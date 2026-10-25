@@ -95,7 +95,12 @@ export function sessionStart(race: Race, type: SessionType) {
   }
 }
 
-export async function getOfficialResults(season: number, round: number, type: SessionType): Promise<string[]> {
+export type OfficialResult = {
+  positions: string[]
+  allClassified: string[]
+}
+
+export async function getOfficialResults(season: number, round: number, type: SessionType): Promise<OfficialResult | null> {
   try {
     let endpoint = ''
     if (type === 'qualifying') endpoint = `${season}/${round}/qualifying.json`
@@ -109,8 +114,9 @@ export async function getOfficialResults(season: number, round: number, type: Se
         if (race) {
           const rows: any[] = (type === 'qualifying' ? race.QualifyingResults : type === 'race' ? race.Results : race.SprintResults) ?? []
           if (rows.length >= 10) {
-            const top10 = rows.slice(0, 10).map((r: any) => normalizeDriverId(r.Driver?.driverId)).filter(Boolean)
-            if (top10.length === 10) return top10
+            const positions = rows.slice(0, 10).map((r: any) => normalizeDriverId(r.Driver?.driverId)).filter(Boolean)
+            const allClassified = rows.map((r: any) => normalizeDriverId(r.Driver?.driverId)).filter(Boolean)
+            if (positions.length === 10) return { positions, allClassified }
           }
         }
       }
@@ -118,9 +124,9 @@ export async function getOfficialResults(season: number, round: number, type: Se
 
     const schedule = await getSchedule(season)
     const event = schedule.find((r) => r.round === round)
-    if (!event) return []
+    if (!event) return null
     return await getOpenF1OfficialResults(season, round, type, event)
   } catch {
-    return []
+    return null
   }
 }

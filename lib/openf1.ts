@@ -112,24 +112,30 @@ export async function resolveOpenF1Session(year: number, sessionType: SessionTyp
   return null
 }
 
-export async function getOpenF1OfficialResults(season: number, round: number, sessionType: SessionType, race: Race): Promise<string[]> {
+export async function getOpenF1OfficialResults(season: number, round: number, sessionType: SessionType, race: Race): Promise<{ positions: string[]; allClassified: string[] } | null> {
   const session = await resolveOpenF1Session(season, sessionType, race)
-  if (!session) return []
+  if (!session) return null
   const raw = await getOpenF1SessionResults(session.session_key)
-  if (!raw || raw.length === 0) return []
+  if (!raw || raw.length === 0) return null
   const classified = raw.filter((r) => r.position != null && Number(r.position) >= 1)
   classified.sort((a, b) => Number(a.position) - Number(b.position))
-  if (classified.length < 10) return []
+  if (classified.length < 10) return null
   const drivers = await getOpenF1Drivers(session.session_key)
   const driverByNum = new Map(drivers.map((d) => [Number(d.driver_number), d]))
-  const top10: string[] = []
+  const positions: string[] = []
   for (let pos = 1; pos <= 10; pos++) {
     const item = classified.find((r) => Number(r.position) === pos)
-    if (!item) return []
+    if (!item) return null
     const dMeta = driverByNum.get(Number(item.driver_number))
     const mappedId = mapOpenF1Driver(item.driver_number, dMeta?.name_acronym)
-    if (!mappedId) return []
-    top10.push(mappedId)
+    if (!mappedId) return null
+    positions.push(mappedId)
   }
-  return top10
+  const allClassified = raw
+    .map((r) => {
+      const dMeta = driverByNum.get(Number(r.driver_number))
+      return mapOpenF1Driver(r.driver_number, dMeta?.name_acronym)
+    })
+    .filter((id): id is string => Boolean(id))
+  return { positions, allClassified }
 }
