@@ -5,11 +5,16 @@ on:
     - cron: '*/30 * * * *'
   workflow_dispatch: {}
 
+concurrency:
+  group: score-predictions
+  cancel-in-progress: false
+
 jobs:
   trigger-scoring:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Call scoring endpoint
         run: |
-          curl -sf -X GET "https://redlinef1.vercel.app/api/cron-score" \
+          curl -sf --max-time 60 --retry 2 --retry-delay 5 --retry-connrefused -X GET "https://redlinef1.vercel.app/api/cron-score" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
