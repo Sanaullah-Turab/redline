@@ -85,27 +85,33 @@ export function matchSessionName(sessionType: SessionType, sessionName: string):
   }
 }
 
-export async function resolveOpenF1Session(year: number, sessionType: SessionType, race: Race): Promise<OpenF1Session | null> {
+export async function resolveOpenF1Session(year: number, sessionType: SessionType, race?: Race, round?: number): Promise<OpenF1Session | null> {
   const sessions = await getOpenF1Sessions(year)
-  const raceDateMs = new Date(`${race.date}T12:00:00Z`).getTime()
-  const locTarget = normalize(race.locality || '')
-  const circuitTarget = normalize(race.circuit || '')
-  const countryTarget = normalize(race.country || '')
+  const targetDate = race ? ((sessionType === 'qualifying' ? race.qualifyingDate : sessionType === 'sprint' ? race.sprintDate : sessionType === 'sprint-qualifying' ? race.sprintQualifyingDate : race.date) || race.date) : ''
+  const raceDateMs = targetDate ? new Date(`${targetDate}T12:00:00Z`).getTime() : 0
+  const locTarget = normalize(race?.locality || (round === 18 ? 'austin' : ''))
+  const circuitTarget = normalize(race?.circuit || '')
+  const countryTarget = normalize(race?.country || (round === 18 ? 'usa' : ''))
+  const nameTarget = normalize(race?.name || (round === 18 ? 'unitedstatesgrandprix' : ''))
 
   for (const s of sessions) {
     if (!matchSessionName(sessionType, s.session_name)) continue
     if (s.is_cancelled) continue
     const sDateMs = new Date(s.date_start).getTime()
-    const diffDays = Math.abs(sDateMs - raceDateMs) / (1000 * 60 * 60 * 24)
-    if (diffDays > 4) continue
+    if (raceDateMs) {
+      const diffDays = Math.abs(sDateMs - raceDateMs) / (1000 * 60 * 60 * 24)
+      if (diffDays > 4) continue
+    }
     const sLoc = normalize(s.location || '')
     const sCircuit = normalize(s.circuit_short_name || '')
     const sCountry = normalize(s.country_name || '')
+    const sCountryCode = normalize(s.country_code || '')
     const locationMatches =
       (locTarget && (sLoc.includes(locTarget) || locTarget.includes(sLoc))) ||
       (circuitTarget && (sCircuit.includes(circuitTarget) || circuitTarget.includes(sCircuit))) ||
       (locTarget && (sCircuit.includes(locTarget) || locTarget.includes(sCircuit))) ||
-      (countryTarget && (sCountry.includes(countryTarget) || countryTarget.includes(sCountry)))
+      (countryTarget && (sCountryCode === countryTarget || sCountry.includes(countryTarget) || countryTarget.includes(sCountry))) ||
+      (nameTarget && ((sLoc && nameTarget.includes(sLoc)) || (sCircuit && nameTarget.includes(sCircuit)) || (sCountry && nameTarget.includes(sCountry))))
 
     if (locationMatches) return s
   }
@@ -119,8 +125,8 @@ export type OpenF1ResultOutcome = {
   classifiedCount: number
 }
 
-export async function getOpenF1OfficialResults(season: number, round: number, sessionType: SessionType, race: Race): Promise<OpenF1ResultOutcome> {
-  const session = await resolveOpenF1Session(season, sessionType, race)
+export async function getOpenF1OfficialResults(season: number, round: number, sessionType: SessionType, race?: Race): Promise<OpenF1ResultOutcome> {
+  const session = await resolveOpenF1Session(season, sessionType, race, round)
   if (!session) return { result: null, resolved: false, classifiedCount: 0 }
   if (session.date_end) {
     const endMs = new Date(session.date_end).getTime()

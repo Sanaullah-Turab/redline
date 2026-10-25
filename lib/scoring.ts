@@ -40,7 +40,8 @@ export async function scoreRound(season: number, round: number, type: SessionTyp
   const referencedDrivers = new Set(entries.flatMap((e) => e.positions.map(normalizeDriverId)))
   const isFullClassification = official.allClassified.length >= 20
   const hasEveryReferencedDriver = Array.from(referencedDrivers).every((d) => official.allClassified.some((c) => areDriversEquivalent(c, d)))
-  if (!isFullClassification && !hasEveryReferencedDriver) {
+  const hasContiguousTopTen = official.positions.length === 10 && new Set(official.positions).size === 10
+  if (!isFullClassification && !hasEveryReferencedDriver && !hasContiguousTopTen) {
     return { status: 'pending', reason: 'Classification is incomplete' }
   }
 

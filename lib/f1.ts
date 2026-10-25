@@ -24,12 +24,20 @@ async function api(path: string, timeoutMs = 8000) {
   }
 }
 
+const scheduleCache = new Map<number, Race[]>()
+
 export async function getSchedule(season: number = SEASON): Promise<Race[]> {
   try {
     const res = await api(`${season}.json`)
-    if (!res.ok || !res.data) return []
-    return (res.data.MRData?.RaceTable?.Races ?? []).map((r: any) => ({ round: Number(r.round), name: r.raceName, circuit: r.Circuit.circuitName, locality: r.Circuit.Location.locality, country: r.Circuit.Location.country, date: r.date, time: r.time ?? '00:00:00Z', qualifyingDate: r.Qualifying?.date, qualifyingTime: r.Qualifying?.time, sprintDate: r.Sprint?.date, sprintTime: r.Sprint?.time, sprintQualifyingDate: r.SprintQualifying?.date, sprintQualifyingTime: r.SprintQualifying?.time }))
-  } catch { return [] }
+    if (res.ok && res.data) {
+      const races = (res.data.MRData?.RaceTable?.Races ?? []).map((r: any) => ({ round: Number(r.round), name: r.raceName, circuit: r.Circuit.circuitName, locality: r.Circuit.Location.locality, country: r.Circuit.Location.country, date: r.date, time: r.time ?? '00:00:00Z', qualifyingDate: r.Qualifying?.date, qualifyingTime: r.Qualifying?.time, sprintDate: r.Sprint?.date, sprintTime: r.Sprint?.time, sprintQualifyingDate: r.SprintQualifying?.date, sprintQualifyingTime: r.SprintQualifying?.time }))
+      if (races.length > 0) scheduleCache.set(season, races)
+      return races
+    }
+    return scheduleCache.get(season) ?? []
+  } catch {
+    return scheduleCache.get(season) ?? []
+  }
 }
 
 const DRIVERS_2026: Driver[] = [
@@ -148,10 +156,6 @@ export async function getOfficialResults(season: number, round: number, type: Se
     if (!event) {
       const schedule = await getSchedule(season)
       event = schedule.find((r) => r.round === round)
-    }
-
-    if (!event) {
-      return { result: null, pendingReason: `Jolpica ${jolpicaOutcome}; OpenF1 session not resolved (0 classified)` }
     }
 
     const openF1 = await getOpenF1OfficialResults(season, round, type, event)
