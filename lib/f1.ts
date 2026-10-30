@@ -171,3 +171,14 @@ export async function getOfficialResults(season: number, round: number, type: Se
     return { result: null, pendingReason: 'Error fetching official results' }
   }
 }
+
+const SESSION_LABELS: Record<SessionType, string> = { qualifying: 'Qualifying', race: 'Race', 'sprint-qualifying': 'Sprint Qualifying', sprint: 'Sprint' }
+
+export function sessionLabel(type: SessionType) {
+  return SESSION_LABELS[type]
+}
+
+export function nextSession(race: Race, now: Date = new Date()) {
+  const types: SessionType[] = isSprint(race) ? ['sprint-qualifying', 'sprint', 'qualifying', 'race'] : ['qualifying', 'race']
+  return types.map((type) => ({ type, start: sessionStart(race, type) })).find(({ start }) => start > now)
+}
