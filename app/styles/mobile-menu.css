@@ -1,0 +1,190 @@
+.mobile-menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  transition: all 0.25s var(--ease);
+  cursor: pointer;
+}
+
+.mobile-menu-toggle:hover,
+.mobile-menu-toggle[aria-expanded='true'] {
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 16px -4px var(--accent-glow);
+}
+
+.mobile-drawer-backdrop {
+  position: fixed;
+  top: 4rem;
+  inset-inline: 0;
+  bottom: 0;
+  background: rgba(11, 11, 13, 0.78);
+  backdrop-filter: blur(12px) saturate(140%);
+  z-index: 45;
+  animation: mobile-fade-in 0.25s var(--ease) both;
+}
+
+.mobile-drawer {
+  position: fixed;
+  top: 4rem;
+  inset-inline: 0;
+  max-height: calc(100vh - 4rem);
+  background: linear-gradient(180deg, #151519 0%, #0d0d10 100%);
+  border-bottom: 2px solid var(--border);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7);
+  z-index: 50;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: mobile-slide-down 0.25s var(--ease) both;
+}
+
+.mobile-drawer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), transparent 85%);
+}
+
+.mobile-drawer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem 1rem 2rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  transition: all 0.2s var(--ease);
+  text-decoration: none;
+  color: var(--foreground);
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link[data-active='true'] {
+  background: var(--muted);
+  border-left-color: var(--primary);
+  transform: translateX(4px);
+}
+
+.mobile-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+  transition: all 0.2s var(--ease);
+}
+
+.mobile-nav-link[data-active='true'] .mobile-nav-icon,
+.mobile-nav-link:hover .mobile-nav-icon {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: rgb(237 27 36 / 0.1);
+}
+
+.mobile-nav-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.mobile-nav-title {
+  font: 800 1.1rem var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mobile-nav-sub {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.mobile-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--primary);
+  transition: all 0.2s var(--ease);
+  text-decoration: none;
+  color: var(--foreground);
+}
+
+.mobile-profile-card:hover {
+  border-color: var(--primary);
+  transform: translateX(4px);
+}
+
+.mobile-sign-out-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font: 800 0.85rem var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: all 0.2s var(--ease);
+  cursor: pointer;
+}
+
+.mobile-sign-out-btn:hover {
+  border-color: var(--destructive);
+  color: var(--destructive);
+  background: rgb(255 86 93 / 0.1);
+}
+
+@keyframes mobile-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes mobile-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-drawer-backdrop,
+  .mobile-drawer {
+    animation: none;
+  }
+  .mobile-nav-link:hover,
+  .mobile-profile-card:hover {
+    transform: none;
+  }
+}

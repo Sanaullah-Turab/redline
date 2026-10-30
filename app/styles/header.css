@@ -67,14 +67,3 @@
   border: 1px solid var(--primary);
   font: 900 0.9rem var(--font-display);
 }
-
-@media (max-width: 760px) {
-  .nav-label {
-    display: none;
-  }
-
-  .nav-link svg {
-    width: 1.3em;
-    height: 1.3em;
-  }
-}
