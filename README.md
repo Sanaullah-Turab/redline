@@ -28,7 +28,11 @@ Live at: [redlinef1.vercel.app](https://redlinef1.vercel.app)
 │   └── workflows/         # GitHub Actions scheduled workflow for scoring
 ├── app/                   # Next.js App Router root
 │   ├── api/                # API Routes (Better Auth catch-all, cron-scoring, etc.)
-│   ├── leaderboard/        # Leaderboard page UI
+│   ├── calendar/           # Filterable race calendar
+│   ├── leaderboard/        # Leaderboard with podium and accuracy
+│   ├── profile/[id]/       # Player profile, stats, and history
+│   ├── stats/              # Season-wide statistics
+│   ├── styles/             # Split stylesheets imported by globals.css
 │   ├── predict/             # Prediction interface (uses dnd-kit for drag and drop)
 │   ├── sign-in/              # Login page
 │   ├── sign-up/              # Registration page
@@ -38,6 +42,7 @@ Live at: [redlinef1.vercel.app](https://redlinef1.vercel.app)
 │   ├── db/                  # Database config (index.ts) and Drizzle schema (schema.ts)
 │   ├── auth.ts                # Better Auth configuration
 │   ├── f1.ts                   # External F1 API fetching (Schedule, Drivers, Results)
+│   ├── stats.ts                # Standings, profile, and round aggregates
 │   └── scoring.ts               # Logic to compare predictions against official results
 ├── supabase/                # Supabase configuration (for local dev or migrations)
 ├── drizzle.config.ts         # Drizzle Kit configuration
