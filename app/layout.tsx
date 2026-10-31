@@ -6,4 +6,4 @@ const body = Geist({ subsets: ['latin'], variable: '--font-body' })
 const display = Barlow_Condensed({ subsets: ['latin'], variable: '--font-display', weight: ['600', '700', '800', '900'] })
 export const metadata: Metadata = { title: { default: 'Redline', template: '%s | Redline' }, description: 'Predict every qualifying and race top 10, score exact-position points, and compete for the Redline championship.' }
 export const viewport: Viewport = { themeColor: '#0b0b0d', colorScheme: 'dark', userScalable: true }
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) { return <html lang="en" className="bg-background"><body className={`${body.variable} ${display.variable} font-sans antialiased`}>{children}{process.env.NODE_ENV === 'production' && <Analytics />}</body></html> }
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) { return <html lang="en" data-scroll-behavior="smooth" className="bg-background"><body className={`${body.variable} ${display.variable} font-sans antialiased`}>{children}{process.env.NODE_ENV === 'production' && <Analytics />}</body></html> }
