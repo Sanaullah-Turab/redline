@@ -161,7 +161,7 @@
 
 .leaderboard-head,
 .leaderboard-row {
-  grid-template-columns: 70px 1fr 90px 110px;
+  grid-template-columns: 70px minmax(0, 1fr) 90px 110px;
 }
 
 .leaderboard-row .hide-sm,
@@ -180,6 +180,7 @@
   display: flex;
   width: 5.5rem;
   height: 5.5rem;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   background: var(--primary);
@@ -189,7 +190,7 @@
 
 .history-row {
   display: grid;
-  grid-template-columns: 4rem 1fr auto;
+  grid-template-columns: 4rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 1rem;
   padding: 0.85rem 1.1rem;
@@ -197,8 +198,15 @@
   border-bottom: 1px solid var(--border);
 }
 
+.history-row b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .history-row .pts {
   font: 900 1.5rem var(--font-display);
+  white-space: nowrap;
 }
 
 .pill {
@@ -222,7 +230,15 @@
 
   .leaderboard-head,
   .leaderboard-row {
-    grid-template-columns: 50px 1fr 80px;
+    grid-template-columns: 44px minmax(0, 1fr) 72px;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .history-row {
+    grid-template-columns: 3rem minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    padding: 0.75rem 0.85rem;
   }
 
   .podium-step { padding-inline: 0.4rem; }

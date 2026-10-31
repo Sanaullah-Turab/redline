@@ -25,12 +25,12 @@ export function RaceCalendar({ races, signedIn }: { races: CalendarRace[]; signe
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="session-tabs" role="tablist" aria-label="Filter races">
+        <div className="session-tabs w-full sm:w-auto" role="tablist" aria-label="Filter races">
           {filters.map((f) => (
             <button key={f} role="tab" aria-selected={filter === f} onClick={() => setFilter(f)} className="capitalize">{f}</button>
           ))}
         </div>
-        <label className="search" style={{ marginBottom: 0 }}>
+        <label className="search w-full sm:w-auto" style={{ marginBottom: 0 }}>
           <span className="sr-only">Search races</span>
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search race or country" />
         </label>
