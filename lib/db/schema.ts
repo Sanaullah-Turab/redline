@@ -9,7 +9,7 @@ export const verification = pgTable('verification', { id: text('id').primaryKey(
 export const predictions = pgTable('predictions', { id: serial('id').primaryKey(), userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }), userName: text('userName').notNull().default(''), season: integer('season').notNull(), round: integer('round').notNull(), sessionType: text('sessionType').notNull(), positions: jsonb('positions').$type<string[]>().notNull(), points: integer('points').notNull().default(0), scored: boolean('scored').notNull().default(false), submittedAt: timestamp('submittedAt').notNull().defaultNow(), updatedAt: timestamp('updatedAt').notNull().defaultNow() }, (table) => [unique().on(table.userId, table.season, table.round, table.sessionType)])
 export const eventResults = pgTable('event_results', { id: serial('id').primaryKey(), season: integer('season').notNull(), round: integer('round').notNull(), sessionType: text('sessionType').notNull(), positions: jsonb('positions').$type<string[]>().notNull(), fetchedAt: timestamp('fetchedAt').notNull().defaultNow() }, (table) => [unique().on(table.season, table.round, table.sessionType)])
 
-// Relations — lets Drizzle relational queries resolve user names from predictions and vice-versa
+// Relations: lets Drizzle relational queries resolve user names from predictions and vice-versa
 export const userRelations = relations(user, ({ many }) => ({
   predictions: many(predictions),
 }))

@@ -182,3 +182,29 @@ export function nextSession(race: Race, now: Date = new Date()) {
   const types: SessionType[] = isSprint(race) ? ['sprint-qualifying', 'sprint', 'qualifying', 'race'] : ['qualifying', 'race']
   return types.map((type) => ({ type, start: sessionStart(race, type) })).find(({ start }) => start > now)
 }
+
+export function formatRaceWeekend(dateStr: string, options: { includeYear?: boolean; longMonth?: boolean } = {}) {
+  const endDate = new Date(`${dateStr}T12:00:00Z`)
+  if (isNaN(endDate.getTime())) return dateStr
+
+  const startDate = new Date(endDate)
+  startDate.setUTCDate(startDate.getUTCDate() - 2)
+
+  const startDay = startDate.getUTCDate()
+  const endDay = endDate.getUTCDate()
+  const startMonth = startDate.toLocaleDateString('en', { month: options.longMonth ? 'long' : 'short', timeZone: 'UTC' })
+  const endMonth = endDate.toLocaleDateString('en', { month: options.longMonth ? 'long' : 'short', timeZone: 'UTC' })
+  const startYear = startDate.getUTCFullYear()
+  const endYear = endDate.getUTCFullYear()
+
+  if (startYear !== endYear) {
+    return `${startDay} ${startMonth} ${startYear} - ${endDay} ${endMonth} ${endYear}`
+  }
+
+  const yearSuffix = options.includeYear ? ` ${endYear}` : ''
+  if (startMonth !== endMonth) {
+    return `${startDay} ${startMonth} - ${endDay} ${endMonth}${yearSuffix}`
+  }
+
+  return `${startDay} - ${endDay} ${endMonth}${yearSuffix}`
+}

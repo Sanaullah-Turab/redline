@@ -32,9 +32,9 @@ export default async function Page({ params }: Props) {
           <div className="racing-stripes" aria-hidden="true"><span /><span /><span /></div>
           <div className="profile-hero relative mx-auto max-w-7xl px-4 py-12 lg:px-8">
             <div className="profile-avatar" aria-hidden="true">{profile.name.charAt(0).toUpperCase()}</div>
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="eyebrow">RANK {profile.rank} OF {profile.players} · JOINED {joined.toUpperCase()}</p>
-              <h1 className="mt-2 font-mono text-5xl font-black uppercase italic md:text-7xl">{profile.name}</h1>
+              <h1 className="mt-2 wrap-anywhere font-mono text-4xl font-black uppercase italic sm:text-5xl md:text-7xl">{profile.name}</h1>
             </div>
           </div>
         </section>

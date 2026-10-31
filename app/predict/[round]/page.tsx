@@ -3,7 +3,7 @@ import { SiteHeader } from '@/components/site-header'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { predictions } from '@/lib/db/schema'
-import { getDrivers, getSchedule, isSprint, SEASON, sessionStart } from '@/lib/f1'
+import { formatRaceWeekend, getDrivers, getSchedule, isSprint, SEASON, sessionStart } from '@/lib/f1'
 import { and, eq } from 'drizzle-orm'
 import { CalendarDays, MapPin, Zap } from 'lucide-react'
 import { headers } from 'next/headers'
@@ -38,11 +38,11 @@ export default async function Page({ params }: { params: Promise<{ round: string
         <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 lg:px-8">
           <p className="eyebrow">ROUND {String(round).padStart(2, '0')} · 2026{isSprintWeekend && <span className="sprint-badge"><Zap aria-hidden="true" />SPRINT</span>}</p>
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div>
-              <h1 className="text-balance font-mono text-5xl font-black uppercase italic md:text-7xl">{event.name}</h1>
+            <div className="min-w-0">
+              <h1 className="text-balance wrap-anywhere font-mono text-4xl font-black uppercase italic sm:text-5xl md:text-7xl">{event.name}</h1>
               <p className="mt-3 flex items-center gap-2 text-muted-foreground"><MapPin /> {event.circuit}, {event.locality}</p>
             </div>
-            <p className="flex items-center gap-2 font-mono font-bold"><CalendarDays /> {new Date(`${event.date}T12:00:00Z`).toLocaleDateString('en', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}</p>
+            <p className="flex items-center gap-2 font-mono font-bold"><CalendarDays /> {formatRaceWeekend(event.date, { includeYear: true })}</p>
           </div>
         </div>
       </section>
