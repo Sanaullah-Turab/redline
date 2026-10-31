@@ -14,7 +14,7 @@ Live at: [redlinef1.vercel.app](https://redlinef1.vercel.app)
 - **Authentication**: [Better Auth](https://better-auth.com/)
 - **Database**: PostgreSQL (hosted on [Supabase](https://supabase.com/)), managed via [Drizzle ORM](https://orm.drizzle.team/)
 - **Interactivity**: `@dnd-kit` for drag-and-drop prediction lists
-- **External Data**: Jolpi Ergast F1 API (`https://api.jolpi.ca/ergast/f1`) for schedules and race results. The 2026 driver roster is hardcoded in `lib/f1.ts` (the API's 2026 data is incomplete — missing drivers, including reserve/test entries).
+- **External Data**: Jolpi Ergast F1 API (`https://api.jolpi.ca/ergast/f1`) for schedules and race results. The 2026 driver roster is hardcoded in `lib/f1.ts` (the API's 2026 data is incomplete, missing drivers and including reserve/test entries).
 - **Hosting**: Vercel
 - **Scoring Automation**: GitHub Actions (scheduled workflow, every 30 minutes)
 
