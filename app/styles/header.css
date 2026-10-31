@@ -9,18 +9,14 @@
 
 .logo-mark {
   display: flex;
-  width: 2.25rem;
-  height: 2.25rem;
+  height: 2rem;
   align-items: center;
   justify-content: center;
-  background: var(--primary);
-  color: var(--primary-foreground);
-  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
   transition: transform 0.3s var(--ease);
 }
 
 .site-header a:hover .logo-mark {
-  transform: rotate(-8deg) scale(1.05);
+  transform: scale(1.08);
 }
 
 .nav-link {
