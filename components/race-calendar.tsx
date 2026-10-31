@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { ArrowRight, LockKeyhole, Zap } from 'lucide-react'
+import { formatRaceWeekend } from '@/lib/f1'
 
 export type CalendarRace = { round: number; name: string; country: string; circuit: string; date: string; sprint: boolean; past: boolean }
 
@@ -48,7 +49,7 @@ export function RaceCalendar({ races, signedIn }: { races: CalendarRace[]; signe
                 <h3>{race.name}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{race.circuit}</p>
               </div>
-              <p>{new Date(`${race.date}T12:00:00Z`).toLocaleDateString('en', { day: '2-digit', month: 'short', timeZone: 'UTC' })}</p>
+              <p>{formatRaceWeekend(race.date)}</p>
               {!race.past && <Link href={signedIn ? `/predict/${race.round}` : '/sign-in'}>Make picks <ArrowRight /></Link>}
             </article>
           ))}
