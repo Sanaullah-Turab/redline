@@ -88,7 +88,8 @@ export function matchSessionName(sessionType: SessionType, sessionName: string):
 export async function resolveOpenF1Session(year: number, sessionType: SessionType, race?: Race, round?: number): Promise<OpenF1Session | null> {
   const sessions = await getOpenF1Sessions(year)
   const targetDate = race ? ((sessionType === 'qualifying' ? race.qualifyingDate : sessionType === 'sprint' ? race.sprintDate : sessionType === 'sprint-qualifying' ? race.sprintQualifyingDate : race.date) || race.date) : ''
-  const raceDateMs = targetDate ? new Date(`${targetDate}T12:00:00Z`).getTime() : 0
+  const rawRaceDateMs = targetDate ? new Date(`${targetDate}T12:00:00Z`).getTime() : 0
+  const hasValidDate = Number.isFinite(rawRaceDateMs) && rawRaceDateMs > 0
   const locTarget = normalize(race?.locality || (round === 18 ? 'austin' : ''))
   const circuitTarget = normalize(race?.circuit || '')
   const countryTarget = normalize(race?.country || (round === 18 ? 'usa' : ''))
@@ -98,22 +99,25 @@ export async function resolveOpenF1Session(year: number, sessionType: SessionTyp
     if (!matchSessionName(sessionType, s.session_name)) continue
     if (s.is_cancelled) continue
     const sDateMs = new Date(s.date_start).getTime()
-    if (raceDateMs) {
-      const diffDays = Math.abs(sDateMs - raceDateMs) / (1000 * 60 * 60 * 24)
+    if (Number.isNaN(sDateMs)) continue
+    if (hasValidDate) {
+      const diffDays = Math.abs(sDateMs - rawRaceDateMs) / (1000 * 60 * 60 * 24)
       if (diffDays > 4) continue
     }
     const sLoc = normalize(s.location || '')
     const sCircuit = normalize(s.circuit_short_name || '')
     const sCountry = normalize(s.country_name || '')
     const sCountryCode = normalize(s.country_code || '')
-    const locationMatches =
-      (locTarget && (sLoc.includes(locTarget) || locTarget.includes(sLoc))) ||
-      (circuitTarget && (sCircuit.includes(circuitTarget) || circuitTarget.includes(sCircuit))) ||
-      (locTarget && (sCircuit.includes(locTarget) || locTarget.includes(sCircuit))) ||
-      (countryTarget && (sCountryCode === countryTarget || sCountry.includes(countryTarget) || countryTarget.includes(sCountry))) ||
-      (nameTarget && ((sLoc && nameTarget.includes(sLoc)) || (sCircuit && nameTarget.includes(sCircuit)) || (sCountry && nameTarget.includes(sCountry))))
+    const specificVenueMatch =
+      Boolean(locTarget && sLoc && (sLoc.includes(locTarget) || locTarget.includes(sLoc))) ||
+      Boolean(circuitTarget && sCircuit && (sCircuit.includes(circuitTarget) || circuitTarget.includes(sCircuit))) ||
+      Boolean(locTarget && sCircuit && (sCircuit.includes(locTarget) || locTarget.includes(sCircuit))) ||
+      Boolean(nameTarget && ((sLoc && nameTarget.includes(sLoc)) || (sCircuit && nameTarget.includes(sCircuit))))
+    const broadCountryMatch =
+      Boolean(countryTarget && (sCountryCode === countryTarget || (sCountry && (sCountry.includes(countryTarget) || countryTarget.includes(sCountry))))) ||
+      Boolean(nameTarget && sCountry && nameTarget.includes(sCountry))
 
-    if (locationMatches) return s
+    if (specificVenueMatch || (hasValidDate && broadCountryMatch)) return s
   }
   return null
 }
