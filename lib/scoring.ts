@@ -11,10 +11,14 @@ export type ScoreResult =
   | { status: 'pending'; reason: string }
   | { status: 'error'; error: string }
 
-export async function scoreRound(season: number, round: number, type: SessionType, schedule?: Race[]): Promise<ScoreResult> {
+export async function scoreRound(season: number, round: number, type: SessionType, schedule?: Race[], options?: { force?: boolean }): Promise<ScoreResult> {
   if (!SCORABLE.includes(type)) return { status: 'pending', reason: `No official results source for session type '${type}'` }
-  const entries = await db.select().from(predictions).where(and(eq(predictions.season, season), eq(predictions.round, round), eq(predictions.sessionType, type), eq(predictions.scored, false)))
-  if (entries.length === 0) return { status: 'scored', scored: 0, message: 'No unscored predictions' }
+  const force = Boolean(options?.force)
+  const whereClause = force
+    ? and(eq(predictions.season, season), eq(predictions.round, round), eq(predictions.sessionType, type))
+    : and(eq(predictions.season, season), eq(predictions.round, round), eq(predictions.sessionType, type), eq(predictions.scored, false))
+  const entries = await db.select().from(predictions).where(whereClause)
+  if (entries.length === 0 && !force) return { status: 'scored', scored: 0, message: 'No unscored predictions' }
 
   let raceEvent: Race | undefined
   const sched = schedule ?? await getSchedule(season)
@@ -54,7 +58,8 @@ export async function scoreRound(season: number, round: number, type: SessionTyp
     await tx.insert(eventResults).values({ season, round, sessionType: type, positions: normalizedPositions }).onConflictDoUpdate({ target: [eventResults.season, eventResults.round, eventResults.sessionType], set: { positions: normalizedPositions, fetchedAt: new Date() } })
     for (const entry of entries) {
       const points = type === 'sprint-qualifying' ? 0 : entry.positions.reduce((total, driver, index) => total + (areDriversEquivalent(normalizedPositions[index], driver) ? 1 : 0), 0)
-      const res = await tx.update(predictions).set({ points, scored: true, updatedAt: new Date() }).where(and(eq(predictions.id, entry.id), eq(predictions.scored, false))).returning({ id: predictions.id })
+      const updateWhere = force ? eq(predictions.id, entry.id) : and(eq(predictions.id, entry.id), eq(predictions.scored, false))
+      const res = await tx.update(predictions).set({ points, scored: true, updatedAt: new Date() }).where(updateWhere).returning({ id: predictions.id })
       if (res.length > 0) scoredCount++
     }
   })

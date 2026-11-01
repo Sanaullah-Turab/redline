@@ -13,9 +13,10 @@ export async function GET(request: NextRequest) {
   if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const round = Number(request.nextUrl.searchParams.get('round'))
   const type = request.nextUrl.searchParams.get('type') as SessionType
+  const force = request.nextUrl.searchParams.get('force') === 'true'
   if (!Number.isInteger(round) || !VALID_TYPES.includes(type)) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   try {
-    return NextResponse.json(await scoreRound(SEASON, round, type))
+    return NextResponse.json(await scoreRound(SEASON, round, type, undefined, { force }))
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? 'Internal Server Error' }, { status: 500 })
   }
