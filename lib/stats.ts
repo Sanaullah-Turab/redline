@@ -1,4 +1,4 @@
-import { desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { predictions, user } from '@/lib/db/schema'
 import { SEASON } from '@/lib/f1'
@@ -18,7 +18,7 @@ export async function getStandings(): Promise<Standing[]> {
       best: sql<number>`coalesce(max(${predictions.points}), 0)::int`,
     })
     .from(user)
-    .leftJoin(predictions, eq(user.id, predictions.userId))
+    .leftJoin(predictions, and(eq(user.id, predictions.userId), eq(predictions.season, SEASON)))
     .groupBy(user.id, user.name)
     .orderBy(desc(sql`coalesce(sum(${predictions.points}), 0)`), user.name)
   return rows.map((row) => ({ ...row, accuracy: accuracy(row.points, row.scored) }))

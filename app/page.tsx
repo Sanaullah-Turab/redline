@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 import { predictions } from '@/lib/db/schema'
 import { Countdown } from '@/components/countdown'
 import { formatRaceWeekend, getSchedule, isSprint, nextSession, SEASON, sessionLabel, sessionStart } from '@/lib/f1'
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { ArrowRight, CalendarDays, CheckCircle2, Flag, LockKeyhole, MapPin, Trophy, Zap } from 'lucide-react'
 import { headers } from 'next/headers'
 
@@ -18,7 +18,7 @@ export default async function Home() {
   const completed = schedule.filter((race) => sessionStart(race, 'race') < now).length
   const sprintRounds = schedule.filter(isSprint).length
   let myPoints = 0; let myPicks = 0
-  if (session?.user) { const [stats] = await db.select({ points: sql<number>`coalesce(sum(${predictions.points}), 0)::int`, picks: sql<number>`count(*)::int` }).from(predictions).where(eq(predictions.userId, session.user.id)); myPoints = stats?.points ?? 0; myPicks = stats?.picks ?? 0 }
+  if (session?.user) { const [stats] = await db.select({ points: sql<number>`coalesce(sum(${predictions.points}), 0)::int`, picks: sql<number>`count(*)::int` }).from(predictions).where(and(eq(predictions.userId, session.user.id), eq(predictions.season, SEASON))); myPoints = stats?.points ?? 0; myPicks = stats?.picks ?? 0 }
   const preview = schedule.filter((race) => sessionStart(race, 'race') >= now).slice(0, 6)
   const upcomingSession = upcoming ? nextSession(upcoming, now) : undefined
   const upcomingIsSprint = upcoming ? isSprint(upcoming) : false
