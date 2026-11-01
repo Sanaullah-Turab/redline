@@ -17,6 +17,7 @@ const DRIVER_MAP: Record<string, string> = {
   '41': 'lindblad',
   '43': 'colapinto',
   '44': 'hamilton',
+  '50': 'hirakawa',
   '55': 'sainz',
   '63': 'russell',
   '77': 'bottas',
@@ -43,6 +44,7 @@ const CODE_MAP: Record<string, string> = {
   LIN: 'lindblad',
   COL: 'colapinto',
   HAM: 'hamilton',
+  HIR: 'hirakawa',
   SAI: 'sainz',
   RUS: 'russell',
   BOT: 'bottas',
@@ -52,23 +54,52 @@ const CODE_MAP: Record<string, string> = {
 
 const ALIAS_MAP: Record<string, string> = {
   arvid_lindblad: 'lindblad',
+  andrea_kimi_antonelli: 'antonelli',
+  kimi_antonelli: 'antonelli',
+  isack_hadjar: 'hadjar',
+  gabriel_bortoleto: 'bortoleto',
+  franco_colapinto: 'colapinto',
+  oliver_bearman: 'bearman',
+  liam_lawson: 'lawson',
+  sergio_perez: 'perez',
+  carlos_sainz: 'sainz',
+  nico_hulkenberg: 'hulkenberg',
+  pierre_gasly: 'gasly',
+  lance_stroll: 'stroll',
+  fernando_alonso: 'alonso',
+  alexander_albon: 'albon',
+  esteban_ocon: 'ocon',
+  valtteri_bottas: 'bottas',
+  oscar_piastri: 'piastri',
+  lando_norris: 'norris',
+  george_russell: 'russell',
+  charles_leclerc: 'leclerc',
+  lewis_hamilton: 'hamilton',
+  verstappen: 'max_verstappen',
+  ryo_hirakawa: 'hirakawa',
 }
 
-export function normalizeDriverId(id: string): string {
+export function normalizeDriverId(id: unknown): string {
+  if (typeof id !== 'string') return ''
   const clean = id.trim().toLowerCase()
+  if (!clean) return ''
   return ALIAS_MAP[clean] ?? clean
 }
 
-export function mapOpenF1Driver(driverNumber: number | string, code?: string): string | null {
-  const numKey = String(driverNumber).trim()
-  if (DRIVER_MAP[numKey]) return DRIVER_MAP[numKey]
-  if (code) {
+export function mapOpenF1Driver(driverNumber: number | string | null | undefined, code?: string | null): string | null {
+  if (driverNumber != null) {
+    const numKey = String(driverNumber).trim()
+    if (DRIVER_MAP[numKey]) return DRIVER_MAP[numKey]
+  }
+  if (typeof code === 'string') {
     const codeKey = code.trim().toUpperCase()
     if (CODE_MAP[codeKey]) return CODE_MAP[codeKey]
   }
   return null
 }
 
-export function areDriversEquivalent(a: string, b: string): boolean {
-  return normalizeDriverId(a) === normalizeDriverId(b)
+export function areDriversEquivalent(a: unknown, b: unknown): boolean {
+  const normA = normalizeDriverId(a)
+  const normB = normalizeDriverId(b)
+  return Boolean(normA && normB && normA === normB)
 }
