@@ -1,22 +1,24 @@
 # Redline: F1 Prediction Game
 
-Redline is a Formula 1 prediction game built with Next.js. Users can sign in, view the F1 schedule, and drag-and-drop to predict the top 10 finishers for upcoming qualifying, race, sprint qualifying, and sprint sessions. The app automatically fetches official results and scores user predictions.
-
-This README is designed to give developers (and AI agents) a comprehensive overview of the architecture, stack, and file structure so you can jump straight into building or modifying features.
+Redline is a Formula 1 prediction game built with Next.js. Users can sign in, view the F1 schedule, and drag-and-drop to predict the top 10 finishers for upcoming qualifying, race, sprint qualifying, and sprint sessions. The app automatically fetches official results, validates classification data, and scores user predictions.
 
 Live at: [redlinef1.vercel.app](https://redlinef1.vercel.app)
 
 ## Tech Stack
 
-- **Framework**: [Next.js 16.2.6](https://nextjs.org/) (App Router)
+- **Framework**: [Next.js 16.2.6](https://nextjs.org/) (App Router, Server Actions)
 - **Package Manager**: pnpm
+- **Language**: TypeScript 5.7.3
 - **Styling and UI**: [Tailwind CSS 4](https://tailwindcss.com/), [Shadcn UI](https://ui.shadcn.com/), Lucide React
 - **Authentication**: [Better Auth](https://better-auth.com/)
 - **Database**: PostgreSQL (hosted on [Supabase](https://supabase.com/)), managed via [Drizzle ORM](https://orm.drizzle.team/)
 - **Interactivity**: `@dnd-kit` for drag-and-drop prediction lists
-- **External Data**: Jolpi Ergast F1 API (`https://api.jolpi.ca/ergast/f1`) for schedules and race results. The 2026 driver roster is hardcoded in `lib/f1.ts` (the API's 2026 data is incomplete, missing drivers and including reserve/test entries).
+- **Telemetry and Official Results**:
+  - Primary: Jolpi Ergast F1 API (`https://api.jolpi.ca/ergast/f1`) for schedules and official classifications.
+  - Fallback: OpenF1 API (`https://api.openf1.org/v1`) when primary results are malformed, delayed, or contain duplicate positions.
+  - Official 2026 driver grid hardcoded in `lib/f1.ts` to guarantee clean data independent of upstream API latency.
 - **Hosting**: Vercel
-- **Scoring Automation**: GitHub Actions (scheduled workflow, every 30 minutes)
+- **Scoring Automation**: GitHub Actions scheduled workflow with fallback Vercel Cron
 
 ---
 
@@ -25,130 +27,185 @@ Live at: [redlinef1.vercel.app](https://redlinef1.vercel.app)
 ```text
 .
 ├── .github/
-│   └── workflows/         # GitHub Actions scheduled workflow for scoring
-├── app/                   # Next.js App Router root
-│   ├── api/                # API Routes (Better Auth catch-all, cron-scoring, etc.)
-│   ├── calendar/           # Filterable race calendar
-│   ├── leaderboard/        # Leaderboard with podium and accuracy
-│   ├── profile/[id]/       # Player profile, stats, and history
-│   ├── stats/              # Season-wide statistics
-│   ├── styles/             # Split stylesheets imported by globals.css
-│   ├── predict/             # Prediction interface (uses dnd-kit for drag and drop)
-│   ├── sign-in/              # Login page
-│   ├── sign-up/              # Registration page
-│   └── globals.css           # Tailwind entrypoint and CSS variables
-├── components/             # Reusable UI components (Shadcn UI and custom)
-├── lib/                    # Core application logic and configuration
-│   ├── db/                  # Database config (index.ts) and Drizzle schema (schema.ts)
-│   ├── auth.ts                # Better Auth configuration
-│   ├── f1.ts                   # External F1 API fetching (Schedule, Drivers, Results)
-│   ├── stats.ts                # Standings, profile, and round aggregates
-│   └── scoring.ts               # Logic to compare predictions against official results
-├── supabase/                # Supabase configuration (for local dev or migrations)
-├── drizzle.config.ts         # Drizzle Kit configuration
-├── pnpm-workspace.yaml        # pnpm settings (build approvals, dependency overrides)
-├── vercel.json                 # Vercel cron job configuration (daily fallback)
-└── .env.local                   # Environment variables (not committed)
+│   └── score-predictions.yml     # GitHub Actions workflow for scheduled scoring (every 30 min)
+├── app/                          # Next.js App Router root
+│   ├── actions/
+│   │   └── predictions.ts        # Server actions to save and fetch user predictions
+│   ├── api/
+│   │   ├── auth/
+│   │   │   └── [...all]/         # Better Auth route handlers
+│   │   ├── cron-score/
+│   │   │   └── route.ts          # Automated scoring route for all pending sessions
+│   │   └── score/
+│   │       └── route.ts          # Targeted scoring route with optional force-rescore support
+│   ├── calendar/
+│   │   └── page.tsx              # Filterable full-season Grand Prix calendar
+│   ├── leaderboard/
+│   │   └── page.tsx              # Championship leaderboard with podium and accuracy metrics
+│   ├── predict/
+│   │   └── [round]/
+│   │       └── page.tsx          # Prediction picker interface for race weekends
+│   ├── profile/
+│   │   └── [id]/
+│   │       └── page.tsx          # User stats, points by round, and session history
+│   ├── sign-in/
+│   │   └── page.tsx              # Authentication sign-in page
+│   ├── sign-up/
+│   │   └── page.tsx              # Authentication registration page
+│   ├── stats/
+│   │   └── page.tsx              # Season telemetry, global accuracy, and round totals
+│   ├── styles/                   # Modular CSS stylesheets
+│   │   ├── effects.css
+│   │   ├── header.css
+│   │   ├── home.css
+│   │   ├── mobile-menu.css
+│   │   └── stats.css
+│   ├── globals.css               # Tailwind CSS entrypoint and theme variables
+│   ├── layout.tsx                # Root layout with metadata and site header
+│   ├── loading.tsx               # Top-level loading state
+│   ├── not-found.tsx             # Custom 404 page
+│   └── page.tsx                  # Home page with upcoming race hero, stats, and calendar preview
+├── components/                   # Reusable UI components
+│   ├── ui/
+│   │   └── button.tsx            # Button primitive
+│   ├── auth-form.tsx             # Sign in and sign up form component
+│   ├── bar-chart.tsx             # CSS bar chart for round points distribution
+│   ├── countdown.tsx             # Dynamic session countdown timer
+│   ├── mobile-menu.tsx           # Responsive drawer navigation for mobile devices
+│   ├── nav-links.tsx             # Header navigation links with active state
+│   ├── prediction-picker.tsx     # DnD-kit sortable grid for ordering top 10 picks
+│   ├── race-calendar.tsx         # Interactive search and filterable race schedule
+│   ├── sign-out-button.tsx       # Auth sign-out control
+│   ├── site-header.tsx           # Global site navigation header
+│   └── stat-card.tsx             # Metric display cards
+├── drizzle/                      # Drizzle schema migrations and metadata
+│   ├── 0000_faithful_sunfire.sql
+│   ├── 0001_enable_rls.sql
+│   └── meta/
+├── lib/                          # Core application utilities and business logic
+│   ├── db/
+│   │   ├── index.ts              # PostgreSQL connection pool and Drizzle client
+│   │   └── schema.ts             # Database tables, relations, and types
+│   ├── auth.ts                   # Better Auth server configuration
+│   ├── auth-client.ts            # Better Auth client hooks and helpers
+│   ├── driver-mapping.ts         # Driver normalization, number/code mapping, and alias equivalence
+│   ├── f1.ts                     # Jolpica Ergast API fetching, schedule caching, and classification parsing
+│   ├── openf1.ts                 # OpenF1 session resolver and fallback classification parser
+│   ├── scoring.ts                # Scoring engine, session validation, and database updates
+│   ├── stats.ts                  # Standings calculation, user profiles, and season metrics
+│   └── utils.ts                  # Shared helper functions (clsx, twMerge)
+├── public/                       # Static public assets, icons, and brand graphics
+│   ├── images/brand/             # Official Redline logos and brand marks
+│   ├── icon.svg
+│   └── placeholder.svg
+├── supabase/
+│   └── config.toml               # Supabase configuration for local environments
+├── drizzle.config.ts             # Drizzle Kit configuration
+├── next.config.mjs               # Next.js configuration
+├── package.json                  # Project dependencies and run scripts
+├── pnpm-lock.yaml                # Lockfile for pnpm
+├── pnpm-workspace.yaml           # pnpm configuration settings
+├── postcss.config.mjs            # PostCSS configuration for Tailwind
+├── tsconfig.json                 # TypeScript compiler options
+└── vercel.json                   # Vercel deployment and cron configuration
 ```
 
 ---
 
 ## Database Schema (`lib/db/schema.ts`)
 
-The database is PostgreSQL. Drizzle ORM is used for queries and schema declarations.
+The database is PostgreSQL hosted on Supabase and managed using Drizzle ORM.
 
 ### Auth Tables (managed by Better Auth)
-- `user`: Standard user profile.
-- `session`: User sessions for authentication.
-- `account`: OAuth / Provider linking.
-- `verification`: For email verification or magic links.
+- `user`: User account details (`id`, `name`, `email`, `createdAt`, `updatedAt`).
+- `session`: Active sessions (`id`, `token`, `userId`, `expiresAt`).
+- `account`: Provider credentials and password hashes (`id`, `userId`, `providerId`, `password`).
+- `verification`: Tokens for account verification flows.
 
 ### Domain Tables
-- **`predictions`**: Stores a user's prediction for a specific session.
-  - Fields: `id`, `userId`, `season`, `round`, `sessionType` ('qualifying' | 'race' | 'sprint-qualifying' | 'sprint'), `positions` (JSONB array of driver IDs), `points` (integer), `scored` (boolean).
-  - Unique Constraint: A user can only have one prediction per `[season, round, sessionType]`.
-- **`event_results`**: Caches the official top 10 results once a session concludes.
-  - Fields: `id`, `season`, `round`, `sessionType`, `positions` (JSONB array).
-  - Unique Constraint: Only one result per `[season, round, sessionType]`.
+- **`predictions`**: Stores a player's top 10 picks for a specific session.
+  - Fields: `id`, `userId`, `userName`, `season`, `round`, `sessionType`, `positions` (JSONB array of 10 driver IDs), `points` (default 0), `scored` (boolean default false), `submittedAt`, `updatedAt`.
+  - Unique Constraint: `(userId, season, round, sessionType)`.
+- **`event_results`**: Caches verified official top 10 results once a session concludes.
+  - Fields: `id`, `season`, `round`, `sessionType`, `positions` (JSONB array of 10 driver IDs), `fetchedAt`.
+  - Unique Constraint: `(season, round, sessionType)`.
 
-**Row Level Security (RLS)** is enabled on all tables. This blocks Supabase's auto-generated Data API from reading or writing directly. The app itself connects via a direct Postgres connection through Drizzle, which bypasses RLS as the table owner, so this only closes off the separate public API layer.
+**Security (Row Level Security)**: RLS is enabled on all tables to disable Supabase's auto-generated Data API. The application connects directly via PostgreSQL using node-postgres (`pg`) and Drizzle ORM.
 
 ---
 
 ## Core Workflows
 
-### 1. F1 Data Fetching (`lib/f1.ts`)
-The app does not store the race schedule or official results in the database. Instead, it dynamically fetches them from `api.jolpi.ca/ergast/f1`.
-- `getSchedule()`: Retrieves the race calendar for the current season, including sprint session dates where applicable.
-- `getDrivers()`: Returns the **hardcoded** 2026 driver roster (`DRIVERS_2026`). The Ergast API was not used here because its 2026 data is incomplete (e.g. missing Verstappen, including reserve/test drivers with no race seats). Update this array manually if the grid changes mid-season.
-- `getOfficialResults(round, type)`: Fetches the top 10 finishers to be used for scoring.
-- `isSprint(race)`: Returns true if a race weekend includes sprint sessions.
-- `sessionStart(race, type)`: Returns the start time for any of the four session types.
+### 1. Official Results & Dual-Source Fallback (`lib/f1.ts`, `lib/openf1.ts`, `lib/driver-mapping.ts`)
+The application requires verified, contiguous top 10 classifications before awarding any points:
+- **Jolpica Ergast API**: The primary source queried for race, qualifying, and sprint results.
+- **Strict Validation**: The raw API response is checked to ensure every position `1` through `10` is present, contiguous, and unique. Any payload containing missing positions, duplicate positions, mismatched position numbers, or incomplete qualifying times is rejected.
+- **OpenF1 Fallback**: If Jolpica is unavailable or fails validation, the system falls back to OpenF1 (`https://api.openf1.org/v1`), matching session keys by circuit, locality, and race date.
+- **Driver Mapping**: `lib/driver-mapping.ts` normalizes driver representations across both APIs using permanent car numbers (`1` to `87`), three-letter acronyms (`VER`, `NOR`, `HAM`), and full-name aliases.
 
-### 2. Predictions (`app/predict/`)
-Users navigate to a specific race and select a session. On standard weekends, two tabs are shown: Qualifying and Race. On sprint weekends, four tabs are shown in chronological order: Sprint Qualifying, Sprint, Qualifying, and Race. They are presented with a drag-and-drop interface powered by `@dnd-kit`. When saved, the ordered list of driver IDs is stored in the `predictions` table as a JSONB array.
+### 2. Prediction Interface (`app/predict/[round]/page.tsx`, `app/actions/predictions.ts`)
+- Users navigate to a round to enter predictions.
+- Regular race weekends offer tabs for **Qualifying** and **Race**.
+- Sprint weekends include four tabs: **Sprint Qualifying**, **Sprint**, **Qualifying**, and **Race**.
+- `@dnd-kit` provides interactive drag-and-drop reordering for the 10 selected drivers.
+- Prediction submissions automatically lock when the session start timestamp is reached.
 
-Sprint Qualifying predictions are accepted but do not earn points, as no official results API exists for that session. A notice is shown on that tab so users are aware.
-
-### 3. Scoring (`lib/scoring.ts` and `app/api/cron-score/`)
-Once a session concludes:
-1. `scoreRound(round, type)` is executed.
-2. It fetches the official top 10 from the Ergast API.
-3. If the official results are available, it saves them to `event_results`.
-4. It iterates over all predictions for that session, comparing the user's `positions` array against the official `positions` array index by index.
-5. 1 point is awarded for every driver placed in the exact correct position.
-
-**Automation**: The `/api/cron-score` route is protected by a bearer token check against `CRON_SECRET`. It is triggered on two schedules:
-- A GitHub Actions workflow (`.github/workflows/`) runs every 30 minutes for near real-time scoring.
-- A Vercel Cron job (`vercel.json`) runs once daily as a fallback, since the Hobby plan limits cron frequency.
-
-Both call the same endpoint and are safe to run redundantly, since scoring only applies points once official results are confirmed available.
+### 3. Scoring System (`lib/scoring.ts`, `app/api/cron-score/`, `app/api/score/`)
+- Once a session concludes, the official top 10 is fetched, normalized, and saved to `event_results`.
+- Predictions are evaluated index by index: 1 point is awarded for each driver predicted in the exact finishing position.
+- Sprint Qualifying predictions accept picks but award 0 points by design.
+- **Scheduled Scoring**:
+  - GitHub Actions runs `.github/score-predictions.yml` every 30 minutes to trigger `/api/cron-score`.
+  - Vercel Cron runs daily as a secondary fallback.
+- **Targeted / Force Scoring**:
+  - `/api/score?round=[round]&type=[sessionType]&force=true` can be called to score or re-score any session on demand. Both endpoints require a `Bearer <CRON_SECRET>` authorization header.
 
 ---
 
 ## Environment Variables
 
-For the application to run successfully, the following environment variables are required. Set them in `.env.local` for local development and in your hosting provider's dashboard for production. Never commit actual secret values to the repository.
+Configure the following environment variables in `.env.local` for local development and in your hosting dashboard for production:
 
 ```env
-# Database connection (Supabase Postgres connection string, transaction pooler recommended)
+# PostgreSQL connection string (Supabase transaction pooler recommended)
 DATABASE_URL="postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres"
 
-# Better Auth required variables
+# Better Auth configuration
 BETTER_AUTH_URL="http://localhost:3000"
 BETTER_AUTH_SECRET="<32-byte-secure-random-string>"
 
-# Protects the /api/cron-score endpoint from unauthorized calls
+# Secret protecting the /api/cron-score and /api/score endpoints
 CRON_SECRET="<random-secure-string>"
 ```
 
-Note: if your database password contains special characters (e.g. `@`, `#`, `%`), they must be URL-encoded in `DATABASE_URL` (e.g. `@` becomes `%40`).
+*Note: If your database password contains special characters (such as `@`, `#`, or `%`), ensure they are URL-encoded in `DATABASE_URL`.*
 
 ---
 
-## Running the App
+## Development & Operations
 
 1. **Install dependencies:**
    ```bash
    pnpm install
    ```
-2. **Start the development server:**
+2. **Start development server:**
    ```bash
    pnpm dev
    ```
-3. **Database Migrations:**
-   Ensure your database is synchronized with your Drizzle schema:
+3. **Run type checks:**
+   ```bash
+   pnpm exec tsc --noEmit
+   ```
+4. **Build production bundle:**
+   ```bash
+   pnpm build
+   ```
+5. **Push schema updates to database:**
    ```bash
    npx drizzle-kit push
    ```
 
-## Notes for AI Agents
-
-- **Package Manager**: This project uses pnpm, not npm or yarn. Always use `pnpm install` for new dependencies to avoid lockfile drift.
-- **Modifying the Schema**: If you add columns to `lib/db/schema.ts`, remember to push/migrate the database.
-- **Styling**: Always use Tailwind utility classes. If a complex component is needed, check if a Shadcn component exists in `components/ui` or can be added via `npx shadcn@latest add <component>`.
-- **Authentication**: Auth state is accessed via Better Auth (`auth.api.getSession` on the server, `useSession` on the client). Avoid writing custom JWT/Cookie logic; rely on Better Auth primitives.
-- **RLS**: Tables have RLS enabled with no policies for the Data API. This is intentional and should not be relaxed without a clear reason, since the app does not use the Supabase client or Data API at all.
+---
 
 ## License
 
