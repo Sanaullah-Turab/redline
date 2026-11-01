@@ -36,20 +36,24 @@ export async function scoreRound(season: number, round: number, type: SessionTyp
     return { status: 'pending', reason: officialOutcome.pendingReason || 'Official top 10 is not available yet' }
   }
   const official = officialOutcome.result
+  const normalizedPositions = official.positions.map(normalizeDriverId).filter(Boolean)
+  if (normalizedPositions.length !== 10 || new Set(normalizedPositions).size !== 10) {
+    return { status: 'pending', reason: 'Official top 10 is invalid' }
+  }
 
-  const referencedDrivers = new Set(entries.flatMap((e) => e.positions.map(normalizeDriverId)))
+  const referencedDrivers = new Set(entries.flatMap((e) => e.positions.map(normalizeDriverId)).filter(Boolean))
   const isFullClassification = official.allClassified.length >= 20
   const hasEveryReferencedDriver = Array.from(referencedDrivers).every((d) => official.allClassified.some((c) => areDriversEquivalent(c, d)))
-  const hasContiguousTopTen = official.positions.length === 10 && new Set(official.positions).size === 10
-  if (!isFullClassification && !hasEveryReferencedDriver && !hasContiguousTopTen) {
+  const hasEveryTopTenInClassified = normalizedPositions.every((d) => official.allClassified.some((c) => areDriversEquivalent(c, d)))
+  if (!hasEveryTopTenInClassified || (!isFullClassification && !hasEveryReferencedDriver && official.allClassified.length < 10)) {
     return { status: 'pending', reason: 'Classification is incomplete' }
   }
 
   let scoredCount = 0
   await db.transaction(async (tx) => {
-    await tx.insert(eventResults).values({ season, round, sessionType: type, positions: official.positions }).onConflictDoUpdate({ target: [eventResults.season, eventResults.round, eventResults.sessionType], set: { positions: official.positions, fetchedAt: new Date() } })
+    await tx.insert(eventResults).values({ season, round, sessionType: type, positions: normalizedPositions }).onConflictDoUpdate({ target: [eventResults.season, eventResults.round, eventResults.sessionType], set: { positions: normalizedPositions, fetchedAt: new Date() } })
     for (const entry of entries) {
-      const points = type === 'sprint-qualifying' ? 0 : entry.positions.reduce((total, driver, index) => total + (areDriversEquivalent(official.positions[index], driver) ? 1 : 0), 0)
+      const points = type === 'sprint-qualifying' ? 0 : entry.positions.reduce((total, driver, index) => total + (areDriversEquivalent(normalizedPositions[index], driver) ? 1 : 0), 0)
       const res = await tx.update(predictions).set({ points, scored: true, updatedAt: new Date() }).where(and(eq(predictions.id, entry.id), eq(predictions.scored, false))).returning({ id: predictions.id })
       if (res.length > 0) scoredCount++
     }
