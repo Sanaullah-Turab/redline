@@ -30,6 +30,10 @@ export default async function Page({ params }: { params: Promise<{ round: string
   const now = new Date()
 
   const pick = (type: string) => picks.find((p) => p.sessionType === type)?.positions ?? []
+  const isLocked = (type: 'qualifying' | 'race' | 'sprint-qualifying' | 'sprint') => {
+    const start = sessionStart(event, type)
+    return Number.isNaN(start.getTime()) || now >= start
+  }
 
   return <>
     <SiteHeader />
@@ -55,10 +59,10 @@ export default async function Page({ params }: { params: Promise<{ round: string
           initialRace={pick('race')}
           initialSprintQualifying={pick('sprint-qualifying')}
           initialSprint={pick('sprint')}
-          qualLocked={now >= sessionStart(event, 'qualifying')}
-          raceLocked={now >= sessionStart(event, 'race')}
-          sprintQualLocked={!isSprintWeekend || now >= sessionStart(event, 'sprint-qualifying')}
-          sprintLocked={!isSprintWeekend || now >= sessionStart(event, 'sprint')}
+          qualLocked={isLocked('qualifying')}
+          raceLocked={isLocked('race')}
+          sprintQualLocked={!isSprintWeekend || isLocked('sprint-qualifying')}
+          sprintLocked={!isSprintWeekend || isLocked('sprint')}
         />
       </section>
     </main>
