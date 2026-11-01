@@ -96,10 +96,10 @@ export function isSprint(race: Race): boolean {
 
 export function sessionStart(race: Race, type: SessionType) {
   switch (type) {
-    case 'qualifying': return new Date(`${race.qualifyingDate}T${race.qualifyingTime || '00:00:00Z'}`)
-    case 'race': return new Date(`${race.date}T${race.time || '00:00:00Z'}`)
-    case 'sprint-qualifying': return new Date(`${race.sprintQualifyingDate}T${race.sprintQualifyingTime || '00:00:00Z'}`)
-    case 'sprint': return new Date(`${race.sprintDate}T${race.sprintTime || '00:00:00Z'}`)
+    case 'qualifying': return race.qualifyingDate ? new Date(`${race.qualifyingDate}T${race.qualifyingTime || '00:00:00Z'}`) : new Date(NaN)
+    case 'race': return race.date ? new Date(`${race.date}T${race.time || '00:00:00Z'}`) : new Date(NaN)
+    case 'sprint-qualifying': return race.sprintQualifyingDate ? new Date(`${race.sprintQualifyingDate}T${race.sprintQualifyingTime || '00:00:00Z'}`) : new Date(NaN)
+    case 'sprint': return race.sprintDate ? new Date(`${race.sprintDate}T${race.sprintTime || '00:00:00Z'}`) : new Date(NaN)
   }
 }
 
@@ -176,21 +176,25 @@ export async function getOfficialResults(season: number, round: number, type: Se
 
     let jolpicaOutcome = ''
     if (endpoint) {
-      const res = await api(endpoint)
-      if (!res.ok) {
-        jolpicaOutcome = String(res.status || 'error')
-      } else if (res.data) {
-        const race = res.data.MRData?.RaceTable?.Races?.[0]
-        if (!race || Number(race.season) !== season || Number(race.round) !== round) {
-          jolpicaOutcome = 'empty result'
+      try {
+        const res = await api(endpoint)
+        if (!res.ok) {
+          jolpicaOutcome = String(res.status || 'error')
+        } else if (res.data) {
+          const race = res.data.MRData?.RaceTable?.Races?.[0]
+          if (!race || Number(race.season) !== season || Number(race.round) !== round) {
+            jolpicaOutcome = 'empty result'
+          } else {
+            const rawRows: any[] = (type === 'qualifying' ? race.QualifyingResults : type === 'race' ? race.Results : race.SprintResults) ?? []
+            const parsed = parseJolpicaClassification(rawRows, type)
+            if (parsed.result) return { result: parsed.result }
+            jolpicaOutcome = parsed.reason || 'incomplete result'
+          }
         } else {
-          const rawRows: any[] = (type === 'qualifying' ? race.QualifyingResults : type === 'race' ? race.Results : race.SprintResults) ?? []
-          const parsed = parseJolpicaClassification(rawRows, type)
-          if (parsed.result) return { result: parsed.result }
-          jolpicaOutcome = parsed.reason || 'incomplete result'
+          jolpicaOutcome = 'empty result'
         }
-      } else {
-        jolpicaOutcome = 'empty result'
+      } catch {
+        jolpicaOutcome = 'error'
       }
     } else {
       jolpicaOutcome = 'no endpoint'
