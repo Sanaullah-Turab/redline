@@ -113,6 +113,60 @@ export type OfficialResultOutcome = {
   pendingReason?: string
 }
 
+function parseJolpicaClassification(rawRows: any[], type: SessionType): { result: OfficialResult | null; reason?: string } {
+  if (!Array.isArray(rawRows) || rawRows.length < 10) {
+    return { result: null, reason: 'empty result' }
+  }
+
+  const positions: string[] = []
+  for (let pos = 1; pos <= 10; pos++) {
+    const matches = rawRows.filter((r: any) => {
+      const p = Number(r?.position)
+      return Number.isInteger(p) && p === pos
+    })
+    if (matches.length === 0) return { result: null, reason: 'incomplete result' }
+    if (matches.length > 1) return { result: null, reason: 'duplicate position in result' }
+
+    const row = matches[0]
+    if (row.positionText != null && String(row.positionText).trim() !== '' && Number(row.positionText) !== pos) {
+      return { result: null, reason: 'invalid position text' }
+    }
+    if (type === 'qualifying' && row.Q1 === '' && Boolean(row.Q2 || row.Q3)) {
+      return { result: null, reason: 'incomplete qualifying times' }
+    }
+
+    const driverId = normalizeDriverId(row?.Driver?.driverId)
+    if (!driverId) return { result: null, reason: 'incomplete result' }
+    positions.push(driverId)
+  }
+
+  if (positions.length !== 10 || new Set(positions).size !== 10) {
+    return { result: null, reason: 'incomplete result' }
+  }
+
+  const driverCounts = new Map<string, number>()
+  for (const r of rawRows) {
+    const id = normalizeDriverId(r?.Driver?.driverId)
+    if (id) driverCounts.set(id, (driverCounts.get(id) ?? 0) + 1)
+  }
+  if (positions.some((id) => (driverCounts.get(id) ?? 0) !== 1)) {
+    return { result: null, reason: 'duplicate driver in result' }
+  }
+
+  const sortedRows = [...rawRows]
+    .filter((r: any) => {
+      const p = Number(r?.position)
+      return Number.isInteger(p) && p >= 1
+    })
+    .sort((a: any, b: any) => Number(a.position) - Number(b.position))
+
+  const allClassified = Array.from(
+    new Set(sortedRows.map((r: any) => normalizeDriverId(r?.Driver?.driverId)).filter(Boolean))
+  )
+
+  return { result: { positions, allClassified } }
+}
+
 export async function getOfficialResults(season: number, round: number, type: SessionType, raceEvent?: Race): Promise<OfficialResultOutcome> {
   try {
     let endpoint = ''
@@ -131,15 +185,9 @@ export async function getOfficialResults(season: number, round: number, type: Se
           jolpicaOutcome = 'empty result'
         } else {
           const rawRows: any[] = (type === 'qualifying' ? race.QualifyingResults : type === 'race' ? race.Results : race.SprintResults) ?? []
-          const rows = [...rawRows].sort((a: any, b: any) => (Number(a.position) || 999) - (Number(b.position) || 999))
-          if (rows.length >= 10) {
-            const positions = rows.slice(0, 10).map((r: any) => normalizeDriverId(r.Driver?.driverId)).filter(Boolean)
-            const allClassified = rows.map((r: any) => normalizeDriverId(r.Driver?.driverId)).filter(Boolean)
-            if (positions.length === 10 && new Set(positions).size === 10) return { result: { positions, allClassified } }
-            jolpicaOutcome = 'incomplete result'
-          } else {
-            jolpicaOutcome = 'empty result'
-          }
+          const parsed = parseJolpicaClassification(rawRows, type)
+          if (parsed.result) return { result: parsed.result }
+          jolpicaOutcome = parsed.reason || 'incomplete result'
         }
       } else {
         jolpicaOutcome = 'empty result'
