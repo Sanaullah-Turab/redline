@@ -1,10 +1,11 @@
 import { type Race, type SessionType } from '@/lib/f1'
-import { mapOpenF1Driver } from '@/lib/driver-mapping'
+import { resolveDriverId } from '@/lib/driver-mapping'
 
 const OPENF1_API = 'https://api.openf1.org/v1'
 
 export type OpenF1Session = {
   session_key: number
+  meeting_key?: number
   session_name: string
   session_type: string
   date_start: string
@@ -35,34 +36,90 @@ export type OpenF1Driver = {
   last_name: string
 }
 
-async function fetchOpenF1<T>(path: string, timeoutMs = 8000): Promise<{ ok: boolean; status: number; data?: T }> {
-  try {
-    const res = await fetch(`${OPENF1_API}/${path}`, { cache: 'no-store', signal: AbortSignal.timeout(timeoutMs) })
-    if (!res.ok) return { ok: false, status: res.status }
-    const text = await res.text()
+export type OpenF1Kind = SessionType | 'practice-1' | 'practice-2' | 'practice-3'
+
+export type OpenF1GridRow = {
+  position: number | string | null
+  driver_number: number | string
+}
+
+const MIN_GAP_MS = 360
+const responseCache = new Map<string, { expires: number; data: unknown }>()
+const inflight = new Map<string, Promise<{ ok: boolean; status: number; data?: any }>>()
+let nextSlotMs = 0
+
+async function waitTurn() {
+  const now = Date.now()
+  const wait = Math.max(0, nextSlotMs - now)
+  nextSlotMs = Math.max(now, nextSlotMs) + MIN_GAP_MS
+  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait))
+}
+
+async function rawFetchOpenF1<T>(path: string, timeoutMs: number, revalidate?: number): Promise<{ ok: boolean; status: number; data?: T }> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await waitTurn()
     try {
-      return { ok: true, status: res.status, data: JSON.parse(text) as T }
-    } catch {
-      return { ok: false, status: res.status }
+      const res = await fetch(`${OPENF1_API}/${path}`, {
+        ...(revalidate ? { next: { revalidate } } : { cache: 'no-store' as const }),
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+      if (res.status === 429 && attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1100))
+        continue
+      }
+      if (!res.ok) return { ok: false, status: res.status }
+      const text = await res.text()
+      try {
+        return { ok: true, status: res.status, data: JSON.parse(text) as T }
+      } catch {
+        return { ok: false, status: res.status }
+      }
+    } catch (err: any) {
+      const isTimeout = err?.name === 'TimeoutError' || err?.name === 'AbortError'
+      return { ok: false, status: isTimeout ? 408 : 0 }
     }
-  } catch (err: any) {
-    const isTimeout = err?.name === 'TimeoutError' || err?.name === 'AbortError'
-    return { ok: false, status: isTimeout ? 408 : 0 }
   }
+  return { ok: false, status: 429 }
+}
+
+async function fetchOpenF1<T>(path: string, options: { timeoutMs?: number; revalidate?: number } = {}): Promise<{ ok: boolean; status: number; data?: T }> {
+  const { timeoutMs = 8000, revalidate } = options
+  const cached = responseCache.get(path)
+  if (cached && cached.expires > Date.now()) {
+    return { ok: true, status: 200, data: cached.data as T }
+  }
+  const active = inflight.get(path)
+  if (active) return active as Promise<{ ok: boolean; status: number; data?: T }>
+
+  const promise = rawFetchOpenF1<T>(path, timeoutMs, revalidate).then((res) => {
+    inflight.delete(path)
+    if (res.ok && res.data !== undefined && (!Array.isArray(res.data) || res.data.length > 0)) {
+      const ttlMs = (revalidate ?? 60) * 1000
+      responseCache.set(path, { expires: Date.now() + ttlMs, data: res.data })
+    }
+    return res
+  })
+  inflight.set(path, promise)
+  return promise
 }
 
 export async function getOpenF1Sessions(year: number): Promise<OpenF1Session[]> {
-  const res = await fetchOpenF1<OpenF1Session[]>(`sessions?year=${year}`)
+  const res = await fetchOpenF1<OpenF1Session[]>(`sessions?year=${year}`, { revalidate: 300 })
   return res.ok && Array.isArray(res.data) ? res.data : []
 }
 
-export async function getOpenF1SessionResults(sessionKey: number): Promise<OpenF1SessionResult[]> {
-  const res = await fetchOpenF1<OpenF1SessionResult[]>(`session_result?session_key=${sessionKey}`)
+export async function getOpenF1SessionResults(sessionKey: number, timeoutMs?: number): Promise<OpenF1SessionResult[]> {
+  const res = await fetchOpenF1<OpenF1SessionResult[]>(`session_result?session_key=${sessionKey}`, { timeoutMs })
   return res.ok && Array.isArray(res.data) ? res.data : []
 }
 
-export async function getOpenF1Drivers(sessionKey: number): Promise<OpenF1Driver[]> {
-  const res = await fetchOpenF1<OpenF1Driver[]>(`drivers?session_key=${sessionKey}`)
+export async function getOpenF1Drivers(sessionKey: number, revalidate?: number, timeoutMs?: number): Promise<OpenF1Driver[]> {
+  const res = await fetchOpenF1<OpenF1Driver[]>(`drivers?session_key=${sessionKey}`, { revalidate, timeoutMs })
+  return res.ok && Array.isArray(res.data) ? res.data : []
+}
+
+export async function getOpenF1StartingGrid(sessionKey: number, timeoutMs?: number): Promise<OpenF1GridRow[]> {
+  const res = await fetchOpenF1<OpenF1GridRow[]>(`starting_grid?session_key=${sessionKey}`, { timeoutMs })
   return res.ok && Array.isArray(res.data) ? res.data : []
 }
 
@@ -70,8 +127,14 @@ function normalize(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]/g, '')
 }
 
-export function matchSessionName(sessionType: SessionType, sessionName: string): boolean {
+export function matchSessionName(sessionType: OpenF1Kind, sessionName: string): boolean {
   switch (sessionType) {
+    case 'practice-1':
+      return sessionName === 'Practice 1'
+    case 'practice-2':
+      return sessionName === 'Practice 2'
+    case 'practice-3':
+      return sessionName === 'Practice 3'
     case 'qualifying':
       return sessionName === 'Qualifying'
     case 'race':
@@ -85,15 +148,26 @@ export function matchSessionName(sessionType: SessionType, sessionName: string):
   }
 }
 
-export async function resolveOpenF1Session(year: number, sessionType: SessionType, race?: Race, round?: number): Promise<OpenF1Session | null> {
-  const sessions = await getOpenF1Sessions(year)
-  const targetDate = race ? ((sessionType === 'qualifying' ? race.qualifyingDate : sessionType === 'sprint' ? race.sprintDate : sessionType === 'sprint-qualifying' ? race.sprintQualifyingDate : race.date) || race.date) : ''
+export async function resolveOpenF1Session(year: number, sessionType: OpenF1Kind, race?: Race, round?: number, knownSessions?: OpenF1Session[]): Promise<OpenF1Session | null> {
+  const sessions = knownSessions ?? await getOpenF1Sessions(year)
+  const targetDate = race
+    ? ((sessionType === 'qualifying'
+        ? race.qualifyingDate
+        : sessionType === 'sprint'
+          ? race.sprintDate
+          : sessionType === 'sprint-qualifying'
+            ? race.sprintQualifyingDate
+            : sessionType === 'practice-3'
+              ? race.thirdPracticeDate || race.qualifyingDate
+              : race.date) || race.date)
+    : ''
   const rawRaceDateMs = targetDate ? new Date(`${targetDate}T12:00:00Z`).getTime() : 0
   const hasValidDate = Number.isFinite(rawRaceDateMs) && rawRaceDateMs > 0
   const locTarget = normalize(race?.locality || (round === 18 ? 'austin' : ''))
   const circuitTarget = normalize(race?.circuit || '')
   const countryTarget = normalize(race?.country || (round === 18 ? 'usa' : ''))
   const nameTarget = normalize(race?.name || (round === 18 ? 'unitedstatesgrandprix' : ''))
+  const closeDateMatches: OpenF1Session[] = []
 
   for (const s of sessions) {
     if (!matchSessionName(sessionType, s.session_name)) continue
@@ -103,6 +177,7 @@ export async function resolveOpenF1Session(year: number, sessionType: SessionTyp
     if (hasValidDate) {
       const diffDays = Math.abs(sDateMs - rawRaceDateMs) / (1000 * 60 * 60 * 24)
       if (diffDays > 4) continue
+      if (diffDays <= 3) closeDateMatches.push(s)
     }
     const sLoc = normalize(s.location || '')
     const sCircuit = normalize(s.circuit_short_name || '')
@@ -119,7 +194,7 @@ export async function resolveOpenF1Session(year: number, sessionType: SessionTyp
 
     if (specificVenueMatch || (hasValidDate && broadCountryMatch)) return s
   }
-  return null
+  return closeDateMatches.length === 1 ? closeDateMatches[0] : null
 }
 
 export type OpenF1ResultOutcome = {
@@ -153,7 +228,7 @@ export async function getOpenF1OfficialResults(season: number, round: number, se
     if (matches.length !== 1) return { result: null, resolved: true, sessionKey: session.session_key, classifiedCount }
     const item = matches[0]
     const dMeta = driverByNum.get(Number(item.driver_number))
-    const mappedId = mapOpenF1Driver(item.driver_number, dMeta?.name_acronym)
+    const mappedId = resolveDriverId(item.driver_number, dMeta?.name_acronym, dMeta?.last_name)
     if (!mappedId) return { result: null, resolved: true, sessionKey: session.session_key, classifiedCount }
     positions.push(mappedId)
   }
@@ -163,7 +238,7 @@ export async function getOpenF1OfficialResults(season: number, round: number, se
       classified
         .map((r) => {
           const dMeta = driverByNum.get(Number(r.driver_number))
-          return mapOpenF1Driver(r.driver_number, dMeta?.name_acronym)
+          return resolveDriverId(r.driver_number, dMeta?.name_acronym, dMeta?.last_name)
         })
         .filter((id): id is string => Boolean(id))
     )

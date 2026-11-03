@@ -1,0 +1,46 @@
+.button-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.button-secondary:disabled:hover {
+  color: inherit;
+  border-color: rgb(255 255 255 / 0.1);
+}
+
+.shortcut-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(245 158 11 / 0.25);
+  border-left: 3px solid var(--amber);
+  background: #101116;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+}
+
+.shortcut-note svg {
+  color: var(--amber);
+}
+
+.shortcut-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(237 27 36 / 0.5);
+  background: #101116;
+  font-size: 0.82rem;
+  font-weight: 600;
+  animation: rise 0.25s var(--ease) both;
+}
+
+.shortcut-confirm .button-primary,
+.shortcut-confirm .button-secondary {
+  padding: 0.35rem 0.7rem;
+}

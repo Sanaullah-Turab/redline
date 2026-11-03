@@ -9,7 +9,24 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
 }
 
 body {
@@ -18,7 +35,6 @@ body {
     linear-gradient(to bottom, rgb(255 255 255 / 0.025) 1px, transparent 1px),
     radial-gradient(60rem 30rem at 85% -10%, rgb(237 27 36 / 0.14), transparent 70%);
   background-size: 48px 48px, 48px 48px, 100% 100%;
-  background-attachment: fixed;
 }
 
 ::selection {
@@ -57,8 +73,9 @@ body {
   position: absolute;
   inset: auto 0 0 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--primary), transparent);
-  opacity: 0.7;
+  background: linear-gradient(90deg, transparent, #ff2932, transparent);
+  box-shadow: 0 -4px 18px 1px rgb(237 27 36 / 0.55);
+  opacity: 0.85;
 }
 
 .racing-stripes {
@@ -124,8 +141,35 @@ body {
   transition: transform 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
 }
 
+.panel:hover {
+  border-color: rgb(255 255 255 / 0.14);
+}
+
 .race-card:hover {
   box-shadow: 0 12px 32px -12px var(--accent-glow);
+}
+
+@keyframes ambient-pulse {
+  0%, 100% {
+    box-shadow: 0 16px 40px -20px rgb(237 27 36 / 0.22);
+  }
+  50% {
+    box-shadow: 0 20px 48px -16px rgb(237 27 36 / 0.42);
+  }
+}
+
+.hero-panel {
+  animation: rise 0.6s var(--ease) both, ambient-pulse 5s ease-in-out infinite;
+}
+
+.next-race {
+  transition: transform 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+.next-race:hover {
+  transform: translateY(-3px);
+  border-color: rgb(237 27 36 / 0.4);
+  box-shadow: 0 18px 42px -20px var(--accent-glow);
 }
 
 .button-primary {
@@ -179,4 +223,140 @@ body {
 @keyframes sweep {
   from { transform: translateX(-100%); }
   to { transform: translateX(250%); }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes page-laser {
+  0% {
+    opacity: 0.95;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  65% {
+    opacity: 0.85;
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+.page-transition-shell {
+  position: relative;
+  animation: page-enter 0.38s var(--ease) both;
+}
+
+.page-transition-sweep {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 65;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--primary), #ff7a59, var(--primary));
+  box-shadow: 0 0 12px var(--primary);
+  animation: page-laser 0.55s var(--ease) both;
+}
+
+@keyframes lights-overlay-fade {
+  0%, 76% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes pod-ignite {
+  0% {
+    background: #23232a;
+    box-shadow: none;
+  }
+  20%, 75% {
+    background: var(--primary);
+    box-shadow: 0 0 18px var(--primary), 0 0 34px rgb(237 27 36 / 0.65);
+  }
+  82%, 100% {
+    background: #19191f;
+    box-shadow: none;
+  }
+}
+
+.start-lights-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 42%, rgb(21 21 26 / 0.94), rgb(11 11 13 / 0.98));
+  backdrop-filter: blur(8px);
+  animation: lights-overlay-fade 1.2s var(--ease) forwards;
+}
+
+.start-lights-gantry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 1.5rem 2rem;
+  background: #121217;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--primary);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.75);
+}
+
+.start-lights-pods {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.start-light-pod {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.55rem;
+  background: #0b0b0e;
+  border: 1px solid #2b2b33;
+  border-radius: 0.35rem;
+}
+
+.start-light-pod i {
+  display: block;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  background: #23232a;
+  animation: pod-ignite 1.05s var(--ease) forwards;
+  animation-delay: calc(var(--pod, 0) * 115ms);
+}
+
+.start-lights-caption {
+  color: var(--muted-foreground);
+  font: 900 0.75rem var(--font-display);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-transition-shell,
+  .page-transition-sweep,
+  .start-lights-overlay {
+    animation: none !important;
+  }
+
+  .start-lights-overlay {
+    display: none !important;
+  }
 }
