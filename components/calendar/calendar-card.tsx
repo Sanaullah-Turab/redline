@@ -91,7 +91,6 @@ export function CalendarCard({
           <h3 className="f1-cal-country">{race.country}</h3>
         </div>
         <p className="f1-cal-official">{race.officialName}</p>
-        <p className="f1-cal-circuit">{race.circuit}</p>
       </div>
 
       {race.status === 'finished' ? (
@@ -109,21 +108,20 @@ export function CalendarCard({
                     data-me={isMe}
                     title={`${tile.name}: ${tile.points} pts`}
                   >
-                    <div className="f1-cal-podium-head">
-                      <span className="f1-cal-podium-pos">{tile.position}</span>
-                      <span className="f1-cal-podium-avatar">
-                        {tile.image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={tile.image} alt="" className="size-full object-cover" />
-                        ) : (
-                          tile.name.slice(0, 1).toUpperCase()
-                        )}
-                      </span>
-                      {isMe && <span className="f1-cal-you">YOU</span>}
-                    </div>
-                    <strong className="f1-cal-podium-name">{tile.name}</strong>
-                    <span className="f1-cal-podium-pts">
-                      {tile.points} {tile.points === 1 ? 'pt' : 'pts'}
+                    <span className="f1-cal-podium-pos">{tile.position}</span>
+                    <span className="f1-cal-podium-avatar">
+                      {tile.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={tile.image} alt="" className="size-full object-cover" />
+                      ) : (
+                        tile.name.slice(0, 1).toUpperCase()
+                      )}
+                    </span>
+                    <span className="f1-cal-podium-info">
+                      <strong className="f1-cal-podium-name">{tile.name}</strong>
+                      <small className="f1-cal-podium-pts">
+                        {tile.points} {tile.points === 1 ? 'pt' : 'pts'}
+                      </small>
                     </span>
                   </Link>
                 )
@@ -131,7 +129,7 @@ export function CalendarCard({
             </div>
           ) : (
             <div className="f1-cal-unscored">
-              <span>Results pending · No scored predictions</span>
+              <span>Results pending</span>
               <Link href={`/predict/${race.round}`}>View round</Link>
             </div>
           )}
@@ -141,7 +139,7 @@ export function CalendarCard({
           <div className="f1-cal-date-block">
             <span className="f1-cal-bottom-date">{dateRange}</span>
             <Link href={href} className="f1-cal-cta">
-              {race.status === 'next' ? 'Lock in weekend picks' : 'Make early picks'} <ChevronRight aria-hidden="true" />
+              {race.status === 'next' ? 'Enter predictions' : 'Make picks'} <ChevronRight aria-hidden="true" />
             </Link>
           </div>
           <CircuitDecor round={race.round} />

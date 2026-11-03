@@ -36,3 +36,4 @@ export function CircuitDecor({ round }: { round: number }) {
     </svg>
   )
 }
+
