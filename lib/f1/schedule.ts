@@ -2,6 +2,29 @@ import { api, SEASON } from './client'
 import { FALLBACK_SCHEDULE_2026 } from './fallback-schedule'
 import type { Race, SessionType } from './types'
 
+interface JolpicaSessionSlot {
+  date?: string
+  time?: string
+}
+
+interface JolpicaRaceItem {
+  round?: string | number
+  raceName?: string
+  date?: string
+  time?: string
+  Circuit?: {
+    circuitName?: string
+    Location?: {
+      locality?: string
+      country?: string
+    }
+  }
+  Qualifying?: JolpicaSessionSlot
+  Sprint?: JolpicaSessionSlot
+  SprintQualifying?: JolpicaSessionSlot
+  ThirdPractice?: JolpicaSessionSlot
+}
+
 const scheduleCache = new Map<number, { races: Race[]; expiresAt: number }>()
 const inFlightSchedule = new Map<number, Promise<Race[]>>()
 const fallbackByRound = new Map(FALLBACK_SCHEDULE_2026.map((race) => [race.round, race]))
@@ -13,40 +36,45 @@ function defaultSchedule(season: number): Race[] {
   return scheduleCache.get(season)?.races ?? (season === SEASON ? FALLBACK_SCHEDULE_2026 : [])
 }
 
+function mapJolpicaRace(raw: JolpicaRaceItem, season: number): Race {
+  const round = Number(raw.round)
+  const fb = season === SEASON ? fallbackByRound.get(round) : undefined
+  return {
+    round,
+    name: raw.raceName || fb?.name || `Round ${round}`,
+    officialName: fb?.officialName,
+    circuit: raw.Circuit?.circuitName || fb?.circuit || '',
+    locality: raw.Circuit?.Location?.locality || fb?.locality || '',
+    country: raw.Circuit?.Location?.country || fb?.country || '',
+    date: raw.date || fb?.date || '',
+    time: raw.time ?? fb?.time ?? '00:00:00Z',
+    qualifyingDate: raw.Qualifying?.date ?? fb?.qualifyingDate,
+    qualifyingTime: raw.Qualifying?.time ?? fb?.qualifyingTime,
+    sprintDate: raw.Sprint?.date ?? fb?.sprintDate,
+    sprintTime: raw.Sprint?.time ?? fb?.sprintTime,
+    sprintQualifyingDate: raw.SprintQualifying?.date ?? fb?.sprintQualifyingDate,
+    sprintQualifyingTime: raw.SprintQualifying?.time ?? fb?.sprintQualifyingTime,
+    thirdPracticeDate: raw.ThirdPractice?.date ?? fb?.thirdPracticeDate,
+    thirdPracticeTime: raw.ThirdPractice?.time ?? fb?.thirdPracticeTime,
+  }
+}
+
 async function fetchScheduleInternal(season: number): Promise<Race[]> {
   try {
-    const res = await api(`${season}.json`, { revalidate: 600, timeoutMs: 2500 })
+    const res = await api(`${season}.json`, {
+      revalidate: 600,
+      timeoutMs: 2500,
+    })
     if (res.ok && res.data) {
-      const races: Race[] = (res.data.MRData?.RaceTable?.Races ?? []).map((r: any) => {
-        const round = Number(r.round)
-        const fb = season === SEASON ? fallbackByRound.get(round) : undefined
-        return {
-          round,
-          name: r.raceName || fb?.name || `Round ${round}`,
-          officialName: fb?.officialName,
-          circuit: r.Circuit?.circuitName || fb?.circuit || '',
-          locality: r.Circuit?.Location?.locality || fb?.locality || '',
-          country: r.Circuit?.Location?.country || fb?.country || '',
-          date: r.date || fb?.date || '',
-          time: r.time ?? fb?.time ?? '00:00:00Z',
-          qualifyingDate: r.Qualifying?.date ?? fb?.qualifyingDate,
-          qualifyingTime: r.Qualifying?.time ?? fb?.qualifyingTime,
-          sprintDate: r.Sprint?.date ?? fb?.sprintDate,
-          sprintTime: r.Sprint?.time ?? fb?.sprintTime,
-          sprintQualifyingDate: r.SprintQualifying?.date ?? fb?.sprintQualifyingDate,
-          sprintQualifyingTime: r.SprintQualifying?.time ?? fb?.sprintQualifyingTime,
-          thirdPracticeDate: r.ThirdPractice?.date ?? fb?.thirdPracticeDate,
-          thirdPracticeTime: r.ThirdPractice?.time ?? fb?.thirdPracticeTime,
-        }
-      })
+      const rawRaces: JolpicaRaceItem[] = res.data.MRData?.RaceTable?.Races ?? []
+      const races = rawRaces.map((item) => mapJolpicaRace(item, season))
       if (races.length > 0) {
         scheduleCache.set(season, { races, expiresAt: Date.now() + LIVE_TTL_MS })
         return races
       }
     }
-  } catch {
-    // Fall through to fallback schedule
-  }
+  } catch {}
+
   const fallback = defaultSchedule(season)
   if (fallback.length > 0) {
     scheduleCache.set(season, { races: fallback, expiresAt: Date.now() + FALLBACK_TTL_MS })
@@ -73,27 +101,43 @@ export function isSprint(race: Race): boolean {
 }
 
 export function thirdPracticeStart(race: Race): Date {
-  return race.thirdPracticeDate ? new Date(`${race.thirdPracticeDate}T${race.thirdPracticeTime || '00:00:00Z'}`) : new Date(NaN)
+  return race.thirdPracticeDate
+    ? new Date(`${race.thirdPracticeDate}T${race.thirdPracticeTime || '00:00:00Z'}`)
+    : new Date(NaN)
 }
 
 export function sessionStart(race: Race, type: SessionType): Date {
   switch (type) {
-    case 'qualifying': return race.qualifyingDate ? new Date(`${race.qualifyingDate}T${race.qualifyingTime || '00:00:00Z'}`) : new Date(NaN)
-    case 'race': return race.date ? new Date(`${race.date}T${race.time || '00:00:00Z'}`) : new Date(NaN)
-    case 'sprint-qualifying': return race.sprintQualifyingDate ? new Date(`${race.sprintQualifyingDate}T${race.sprintQualifyingTime || '00:00:00Z'}`) : new Date(NaN)
-    case 'sprint': return race.sprintDate ? new Date(`${race.sprintDate}T${race.sprintTime || '00:00:00Z'}`) : new Date(NaN)
-    default: return new Date(NaN)
+    case 'qualifying':
+      return race.qualifyingDate ? new Date(`${race.qualifyingDate}T${race.qualifyingTime || '00:00:00Z'}`) : new Date(NaN)
+    case 'race':
+      return race.date ? new Date(`${race.date}T${race.time || '00:00:00Z'}`) : new Date(NaN)
+    case 'sprint-qualifying':
+      return race.sprintQualifyingDate
+        ? new Date(`${race.sprintQualifyingDate}T${race.sprintQualifyingTime || '00:00:00Z'}`)
+        : new Date(NaN)
+    case 'sprint':
+      return race.sprintDate ? new Date(`${race.sprintDate}T${race.sprintTime || '00:00:00Z'}`) : new Date(NaN)
+    default:
+      return new Date(NaN)
   }
 }
 
-const SESSION_LABELS: Record<SessionType, string> = { qualifying: 'Qualifying', race: 'Race', 'sprint-qualifying': 'Sprint Qualifying', sprint: 'Sprint' }
+const SESSION_LABELS: Record<SessionType, string> = {
+  qualifying: 'Qualifying',
+  race: 'Race',
+  'sprint-qualifying': 'Sprint Qualifying',
+  sprint: 'Sprint',
+}
 
 export function sessionLabel(type: SessionType) {
   return SESSION_LABELS[type]
 }
 
 export function nextSession(race: Race, now: Date = new Date()) {
-  const types: SessionType[] = isSprint(race) ? ['sprint-qualifying', 'sprint', 'qualifying', 'race'] : ['qualifying', 'race']
+  const types: SessionType[] = isSprint(race)
+    ? ['sprint-qualifying', 'sprint', 'qualifying', 'race']
+    : ['qualifying', 'race']
   return types.map((type) => ({ type, start: sessionStart(race, type) })).find(({ start }) => start > now)
 }
 
@@ -106,8 +150,14 @@ export function formatRaceWeekend(dateStr: string, options: { includeYear?: bool
 
   const startDay = startDate.getUTCDate()
   const endDay = endDate.getUTCDate()
-  const startMonth = startDate.toLocaleDateString('en', { month: options.longMonth ? 'long' : 'short', timeZone: 'UTC' })
-  const endMonth = endDate.toLocaleDateString('en', { month: options.longMonth ? 'long' : 'short', timeZone: 'UTC' })
+  const startMonth = startDate.toLocaleDateString('en', {
+    month: options.longMonth ? 'long' : 'short',
+    timeZone: 'UTC',
+  })
+  const endMonth = endDate.toLocaleDateString('en', {
+    month: options.longMonth ? 'long' : 'short',
+    timeZone: 'UTC',
+  })
   const startYear = startDate.getUTCFullYear()
   const endYear = endDate.getUTCFullYear()
 
