@@ -3,34 +3,19 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import {
-  BarChart3,
-  CalendarDays,
-  ChevronRight,
-  Home,
-  LogOut,
-  Menu,
-  Trophy,
-  UserRound,
-  X,
-} from 'lucide-react'
+import { ChevronRight, LogOut, Menu, UserRound, X } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
+import { isActive, navItemsFor } from './nav-items'
 
 interface MobileMenuProps {
   user?: {
     id: string
     name: string
   } | null
+  isAdmin?: boolean
 }
 
-const navItems = [
-  { href: '/', label: 'Home', subtitle: 'Predictions and round status', icon: Home },
-  { href: '/calendar', label: 'Calendar', subtitle: '2026 Grand Prix schedule', icon: CalendarDays },
-  { href: '/leaderboard', label: 'Leaderboard', subtitle: 'Championship standings', icon: Trophy },
-  { href: '/stats', label: 'Stats', subtitle: 'Season telemetry and accuracy', icon: BarChart3 },
-]
-
-export function MobileMenu({ user }: MobileMenuProps) {
+export function MobileMenu({ user, isAdmin = false }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
@@ -95,8 +80,8 @@ export function MobileMenu({ user }: MobileMenuProps) {
               </div>
 
               <nav className="flex flex-col gap-2" aria-label="Mobile menu links">
-                {navItems.map(({ href, label, subtitle, icon: Icon }, index) => {
-                  const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
+                {navItemsFor(isAdmin).map(({ href, label, subtitle, icon: Icon }, index) => {
+                  const active = isActive(href, pathname)
                   return (
                     <Link
                       key={href}

@@ -1,21 +1,14 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, CalendarDays, Home, Trophy } from 'lucide-react'
+import { isActive, navItemsFor } from './nav-items'
 
-const links = [
-  { href: '/', label: 'Home', icon: Home },
-  { href: '/calendar', label: 'Calendar', icon: CalendarDays },
-  { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-  { href: '/stats', label: 'Stats', icon: BarChart3 },
-]
-
-export function NavLinks() {
+export function NavLinks({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname()
   return (
     <>
-      {links.map(({ href, label, icon: Icon }) => {
-        const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
+      {navItemsFor(isAdmin).map(({ href, label, icon: Icon }) => {
+        const active = isActive(href, pathname)
         return (
           <Link key={href} href={href} className="nav-link" data-active={active} aria-current={active ? 'page' : undefined}>
             <Icon aria-hidden="true" />

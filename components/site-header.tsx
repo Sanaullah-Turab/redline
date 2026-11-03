@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { isAdminEmail } from '@/lib/admin'
 import { getSession } from '@/lib/session'
 import { MobileMenu } from './mobile-menu'
 import { NavLinks } from './nav-links'
@@ -8,6 +9,7 @@ import { SignOutButton } from './sign-out-button'
 export async function SiteHeader() {
   const session = await getSession()
   const user = session?.user ? { id: session.user.id, name: session.user.name } : null
+  const isAdmin = isAdminEmail(session?.user?.email)
 
   return (
     <header className="site-header">
@@ -29,11 +31,11 @@ export async function SiteHeader() {
           </span>
         </Link>
         <nav aria-label="Main navigation" className="hidden md:flex items-center gap-1">
-          <NavLinks />
+          <NavLinks isAdmin={isAdmin} />
           {user ? <SignOutButton id={user.id} name={user.name} /> : <Link href="/sign-in" className="button-primary">Sign in</Link>}
         </nav>
         <div className="flex md:hidden items-center">
-          <MobileMenu user={user} />
+          <MobileMenu user={user} isAdmin={isAdmin} />
         </div>
       </div>
     </header>
