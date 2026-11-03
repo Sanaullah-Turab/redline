@@ -1,19 +1,22 @@
 .leaderboard {
   --lb-cols: 3.25rem minmax(0, 1fr) 5.25rem 4.75rem 5.5rem;
   --champagne: #e8cfa0;
-  border: 1px solid rgb(255 255 255 / 0.09);
+  border: 1px solid rgb(255 255 255 / 0.1);
   border-top: 3px solid #ff2932;
   border-radius: 0.75rem;
-  background: linear-gradient(
-    180deg,
-    rgb(237 27 36 / 0.13) 0%,
-    rgb(237 27 36 / 0.025) 32%,
-    rgb(18 19 25 / 0.76) 100%
-  );
+  background:
+    linear-gradient(
+      180deg,
+      rgb(237 27 36 / 0.18) 0%,
+      rgb(237 27 36 / 0.04) 34%,
+      transparent 70%
+    ),
+    rgb(16 17 23 / 0.85);
   backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
   box-shadow:
-    inset 0 22px 32px -18px rgb(237 27 36 / 0.42),
-    0 -2px 14px -3px rgb(237 27 36 / 0.35);
+    inset 0 22px 32px -18px rgb(237 27 36 / 0.44),
+    0 -2px 14px -3px rgb(237 27 36 / 0.36);
   overflow: hidden;
 }
 
@@ -27,10 +30,10 @@
 
 .lb-head {
   min-height: 3rem;
-  border-bottom: 1px solid rgb(255 255 255 / 0.07);
-  background: rgb(255 255 255 / 0.02);
-  color: var(--muted-foreground);
-  font: 700 0.72rem var(--font-display);
+  border-bottom: 1px solid rgb(255 255 255 / 0.09);
+  background: rgb(255 255 255 / 0.03);
+  color: #ffffff;
+  font: 700 0.74rem var(--font-display);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -129,7 +132,7 @@
 }
 
 .lb-sessions {
-  color: var(--muted-foreground);
+  color: rgb(255 255 255 / 0.85);
   font-size: 0.75rem;
 }
 

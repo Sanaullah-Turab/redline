@@ -107,10 +107,10 @@ export default async function Home() {
                   <h2 className="mt-2 wrap-anywhere font-mono text-4xl font-black uppercase italic md:text-6xl">
                     {upcoming.name}
                   </h2>
-                  <p className="mt-4 flex items-center gap-2 text-muted-foreground">
+                  <p className="mt-4 flex items-center gap-2 text-white/90">
                     <MapPin /> {upcoming.circuit} · {upcoming.locality}
                   </p>
-                  <p className="mt-2 flex items-center gap-2 text-muted-foreground">
+                  <p className="mt-2 flex items-center gap-2 text-white/90">
                     <CalendarDays /> {formatRaceWeekend(upcoming.date, { includeYear: true, longMonth: true })}
                   </p>
                   {upcomingIsSprint && (

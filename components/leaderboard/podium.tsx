@@ -20,7 +20,6 @@ export function Podium({ rows }: { rows: RankedStanding[] }) {
             <span className="place">P{row.rank}</span>
             <b>{row.name}</b>
             <strong>{row.points}</strong>
-            <small className="text-muted-foreground">{row.accuracy}% accuracy</small>
           </Link>
         )
       })}

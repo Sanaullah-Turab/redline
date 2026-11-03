@@ -34,7 +34,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.42rem;
-  color: var(--muted-foreground);
+  color: #ffffff;
   font: 500 0.76rem var(--font-sans);
 }
 
@@ -111,7 +111,7 @@
 }
 
 .picks-round-pill small {
-  color: var(--muted-foreground);
+  color: #ffffff;
   font: 600 0.72rem var(--font-sans);
   font-variant-numeric: tabular-nums;
 }
@@ -149,7 +149,7 @@
   position: relative;
   padding: 0.35rem 0.7rem;
   border-radius: 0.35rem;
-  color: var(--muted-foreground);
+  color: #ffffff;
   font: 600 0.74rem var(--font-sans);
   transition: color 0.18s var(--ease), background-color 0.18s var(--ease);
 }
@@ -188,18 +188,21 @@
   gap: 1.25rem;
   padding: 1.35rem;
   border-radius: 0.85rem;
-  border: 1px solid rgb(255 255 255 / 0.09);
+  border: 1px solid rgb(255 255 255 / 0.11);
   border-top: 3px solid #ff2932;
-  background: linear-gradient(
-    180deg,
-    rgb(237 27 36 / 0.13) 0%,
-    rgb(237 27 36 / 0.025) 34%,
-    rgb(18 19 25 / 0.76) 100%
-  );
+  background:
+    linear-gradient(
+      180deg,
+      rgb(237 27 36 / 0.18) 0%,
+      rgb(237 27 36 / 0.04) 36%,
+      transparent 72%
+    ),
+    rgb(16 17 23 / 0.86);
   backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
   box-shadow:
-    inset 0 22px 32px -18px rgb(237 27 36 / 0.42),
-    0 -2px 14px -3px rgb(237 27 36 / 0.35);
+    inset 0 22px 32px -18px rgb(237 27 36 / 0.44),
+    0 -2px 14px -3px rgb(237 27 36 / 0.36);
 }
 
 .weekend-picks-header {
@@ -209,7 +212,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgb(255 255 255 / 0.06);
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
 }
 
 .weekend-picks-meta {
@@ -217,14 +220,15 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem;
-  color: var(--muted-foreground);
-  font: 700 0.7rem var(--font-display);
+  color: #ffffff;
+  font: 700 0.76rem var(--font-display);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .weekend-picks-header h3 {
   margin-top: 0.2rem;
+  color: #ffffff;
   font: 800 1.45rem / 1.15 var(--font-sans);
   letter-spacing: -0.01em;
 }
@@ -235,23 +239,24 @@
   gap: 0.65rem;
   padding: 0.45rem 0.85rem;
   border-radius: 0.5rem;
-  background: rgb(255 255 255 / 0.03);
-  border: 1px solid rgb(255 255 255 / 0.07);
+  background: rgb(255 255 255 / 0.05);
+  border: 1px solid rgb(255 255 255 / 0.1);
 }
 
 .weekend-picks-score span {
-  color: var(--muted-foreground);
-  font: 600 0.72rem var(--font-sans);
+  color: #ffffff;
+  font: 600 0.76rem var(--font-sans);
 }
 
 .weekend-picks-score strong {
+  color: #ffffff;
   font: 800 1.35rem / 1 var(--font-display);
   font-variant-numeric: tabular-nums;
 }
 
 .weekend-picks-score small {
-  color: var(--muted-foreground);
-  font-size: 0.82rem;
+  color: #ffffff;
+  font-size: 0.84rem;
   font-weight: 600;
 }
 
@@ -295,22 +300,23 @@
   padding: 0.12rem 0.45rem;
   border-radius: 999px;
   font: 600 0.65rem var(--font-sans);
-  color: var(--muted-foreground);
-  background: rgb(255 255 255 / 0.05);
+  color: #ffffff;
+  background: rgb(255 255 255 / 0.08);
 }
 
 .session-status-dot[data-scored='true'] {
   color: #4ade80;
-  background: rgb(34 197 94 / 0.1);
+  background: rgb(34 197 94 / 0.12);
 }
 
 .session-picks-pts strong {
+  color: #ffffff;
   font: 800 1.05rem var(--font-display);
   font-variant-numeric: tabular-nums;
 }
 
 .session-picks-pts span {
-  color: var(--muted-foreground);
+  color: #ffffff;
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -403,7 +409,7 @@
 .pick-pos {
   font: 800 0.86rem var(--font-display);
   font-variant-numeric: tabular-nums;
-  color: var(--muted-foreground);
+  color: #ffffff;
 }
 
 .pick-row[data-state='exact'] .pick-pos {
