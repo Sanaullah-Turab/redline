@@ -156,3 +156,4 @@ export async function getUserWeekendPicks(userId: string): Promise<WeekendPicksG
 
   return groups.sort((a, b) => b.round - a.round)
 }
+

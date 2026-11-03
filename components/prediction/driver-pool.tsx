@@ -17,7 +17,7 @@ export function DriverPool({ drivers, selected, disabled, onAdd }: Props) {
   return (
     <aside className="panel">
       <div className="panel-heading"><div><p className="eyebrow">OFFICIAL ENTRY LIST</p><h2>Add drivers</h2></div></div>
-      <label className="search"><Search aria-hidden="true" /><span className="sr-only">Search drivers</span><input placeholder="Search driver" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+      <label className="search"><Search aria-hidden="true" /><span className="sr-only">Search drivers</span><input id="driver-search" name="driverSearch" placeholder="Search driver" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
       <div className="driver-pool">
         {available.map((driver) => (
           <button key={driver.id} disabled={disabled || full} onClick={() => onAdd(driver.id)}>

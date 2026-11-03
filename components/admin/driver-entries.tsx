@@ -31,7 +31,7 @@ export function DriverEntries({ round, entered, withdrawn, replaceable, editable
   }
 
   const field = (key: keyof typeof EMPTY, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
-    <label className="admin-field"><span>{label}</span><input value={form[key]} onChange={(event) => setForm({ ...form, [key]: event.target.value })} disabled={!editable || pending} {...props} /></label>
+    <label className="admin-field"><span>{label}</span><input id={`driver-entry-${key}`} name={key} value={form[key]} onChange={(event) => setForm({ ...form, [key]: event.target.value })} disabled={!editable || pending} {...props} /></label>
   )
 
   return (

@@ -53,6 +53,8 @@ export function RaceCalendar({
         <label className="search w-full sm:w-auto" style={{ marginBottom: 0 }}>
           <span className="sr-only">Search races</span>
           <input
+            id="calendar-search"
+            name="calendarSearch"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search race, country, or winner"

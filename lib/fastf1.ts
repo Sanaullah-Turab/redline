@@ -93,3 +93,4 @@ export async function getFastF1OfficialResults(season: number, round: number, se
 export async function getFastF1Reference(season: number, round: number, kind: ReferenceKind): Promise<{ positions: string[]; drivers: Driver[] } | null> {
   return runFastF1Bridge(season, round, kind)
 }
+

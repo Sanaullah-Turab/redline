@@ -224,9 +224,9 @@ export const FALLBACK_SCHEDULE_2026: Race[] = [
   {
     "round": 16,
     "name": "Bahrain Grand Prix",
-    "officialName": "FORMULA 1 GULF AIR BAHRAIN GRAND PRIX IN MALAYSIA 2026",
+    "officialName": "FORMULA 1 GULF AIR BAHRAIN GRAND PRIX 2026",
     "circuit": "Bahrain International Circuit",
-    "locality": "Kuala Lumpur",
+    "locality": "Sakhir",
     "country": "Bahrain",
     "date": "2026-10-04",
     "time": "07:00:00Z",
