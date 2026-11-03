@@ -23,6 +23,7 @@
 .nav-link {
   position: relative;
   border-radius: 0.45rem;
+  color: #ffffff;
 }
 
 .nav-link::after {
@@ -41,7 +42,7 @@
 }
 
 .nav-link[data-active='true'] {
-  color: var(--foreground);
+  color: #ffffff;
 }
 
 .nav-link:hover {
