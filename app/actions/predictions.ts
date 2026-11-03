@@ -1,16 +1,15 @@
 'use server'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
 import { predictions } from '@/lib/db/schema'
 import { getRoundDrivers } from '@/lib/drivers/round-drivers'
 import { getSchedule, isSprint, SEASON, sessionStart, type SessionType } from '@/lib/f1'
 import { and, eq } from 'drizzle-orm'
-import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 
 const VALID_TYPES: SessionType[] = ['qualifying', 'race', 'sprint-qualifying', 'sprint']
 
-async function getUser() { const session = await auth.api.getSession({ headers: await headers() }); if (!session?.user) throw new Error('Please sign in'); return { id: session.user.id, name: session.user.name } }
+async function getUser() { const session = await getSession(); if (!session?.user) throw new Error('Please sign in'); return { id: session.user.id, name: session.user.name } }
 
 export async function savePrediction(round: number, type: SessionType, positions: string[]) {
   const { id, name: userName } = await getUser()

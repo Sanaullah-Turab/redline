@@ -1,15 +1,14 @@
-import { headers } from 'next/headers'
 import { LeaderboardTable } from '@/components/leaderboard/leaderboard-table'
 import { Podium } from '@/components/leaderboard/podium'
 import { SiteHeader } from '@/components/site-header'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { getStandings, rankStandings } from '@/lib/stats'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Leaderboard' }
 
 export default async function Page() {
-  const [standings, session] = await Promise.all([getStandings(), auth.api.getSession({ headers: await headers() })])
+  const [standings, session] = await Promise.all([getStandings(), getSession()])
   const rows = rankStandings(standings)
 
   return (

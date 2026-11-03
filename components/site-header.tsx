@@ -1,13 +1,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { getSession } from '@/lib/session'
 import { MobileMenu } from './mobile-menu'
 import { NavLinks } from './nav-links'
 import { SignOutButton } from './sign-out-button'
 
 export async function SiteHeader() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await getSession()
   const user = session?.user ? { id: session.user.id, name: session.user.name } : null
 
   return (

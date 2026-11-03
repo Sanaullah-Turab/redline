@@ -1,14 +1,13 @@
-import { headers } from 'next/headers'
 import { RaceCalendar } from '@/components/race-calendar'
 import { SiteHeader } from '@/components/site-header'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { getSchedule, isSprint, SEASON, sessionStart } from '@/lib/f1'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Calendar' }
 
 export default async function Page() {
-  const [schedule, session] = await Promise.all([getSchedule(), auth.api.getSession({ headers: await headers() })])
+  const [schedule, session] = await Promise.all([getSchedule(), getSession()])
   const now = new Date()
   const races = schedule.map((race) => ({
     round: race.round,

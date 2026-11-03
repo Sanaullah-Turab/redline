@@ -1,18 +1,17 @@
 import Link from 'next/link'
 import { SiteHeader } from '@/components/site-header'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
 import { predictions } from '@/lib/db/schema'
 import { Countdown } from '@/components/countdown'
 import { formatRaceWeekend, getSchedule, isSprint, nextSession, SEASON, sessionLabel, sessionStart } from '@/lib/f1'
 import { and, eq, sql } from 'drizzle-orm'
 import { ArrowRight, CalendarDays, CheckCircle2, Flag, LockKeyhole, MapPin, Trophy, Zap } from 'lucide-react'
-import { headers } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
-  const [schedule, session] = await Promise.all([getSchedule(), auth.api.getSession({ headers: await headers() })])
+  const [schedule, session] = await Promise.all([getSchedule(), getSession()])
   const now = new Date()
   const upcoming = schedule.find((race) => sessionStart(race, 'race') > now) ?? schedule.at(-1)
   const completed = schedule.filter((race) => sessionStart(race, 'race') < now).length

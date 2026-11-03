@@ -1,6 +1,6 @@
 import { PredictionPicker } from '@/components/prediction/prediction-picker'
 import { SiteHeader } from '@/components/site-header'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
 import { predictions } from '@/lib/db/schema'
 import { getDriverCatalog, getRoundDrivers } from '@/lib/drivers/round-drivers'
@@ -9,7 +9,6 @@ import { formatRaceWeekend, getSchedule, isSprint, SEASON, sessionStart, type Se
 import { getShortcut } from '@/lib/reference'
 import { and, eq } from 'drizzle-orm'
 import { CalendarDays, MapPin, Zap } from 'lucide-react'
-import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
@@ -19,7 +18,7 @@ const WEEKEND_LEAD_MS = 3 * 24 * 60 * 60 * 1000
 export default async function Page({ params }: { params: Promise<{ round: string }> }) {
   const { round: raw } = await params
   const round = Number(raw)
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await getSession()
   if (!session?.user) redirect('/sign-in')
 
   const [schedule, picks] = await Promise.all([
