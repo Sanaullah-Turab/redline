@@ -8,6 +8,13 @@
       "when": 1788762498542,
       "tag": "0000_faithful_sunfire",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793692710962,
+      "tag": "0001_season_overhaul",
+      "breakpoints": true
     }
   ]
 }
