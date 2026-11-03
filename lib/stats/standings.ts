@@ -24,6 +24,17 @@ export async function getStandings(): Promise<Standing[]> {
   return rows.map((row) => ({ ...row, accuracy: accuracy(row.points, row.scored) }))
 }
 
+export type RankedStanding = Standing & { rank: number; gap: number; isLeader: boolean }
+
+export function rankStandings(rows: Standing[]): RankedStanding[] {
+  const leaderPoints = rows[0]?.points ?? 0
+  let rank = 0
+  return rows.map((row, index) => {
+    if (index === 0 || row.points !== rows[index - 1].points) rank = index + 1
+    return { ...row, rank, gap: leaderPoints - row.points, isLeader: rank === 1 && row.points > 0 }
+  })
+}
+
 export function accuracy(points: number, scored: number) {
   return scored ? Math.round((points / (scored * MAX_POINTS_PER_SESSION)) * 100) : 0
 }
