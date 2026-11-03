@@ -1,4 +1,6 @@
-import { MIN_DRIVER_PICKS, type DriverHitStat } from '@/lib/stats'
+import type { DriverHitStat } from '@/lib/stats'
+
+const MIN_DRIVER_PICKS = 3
 
 export function DriverHitLists({
   mostCorrect,
