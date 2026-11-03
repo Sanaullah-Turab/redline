@@ -64,18 +64,18 @@ export async function getOpenF1Sessions(year: number): Promise<OpenF1Session[]> 
   return res.ok && Array.isArray(res.data) ? res.data : []
 }
 
-export async function getOpenF1SessionResults(sessionKey: number): Promise<OpenF1SessionResult[]> {
-  const res = await fetchOpenF1<OpenF1SessionResult[]>(`session_result?session_key=${sessionKey}`)
+export async function getOpenF1SessionResults(sessionKey: number, timeoutMs?: number): Promise<OpenF1SessionResult[]> {
+  const res = await fetchOpenF1<OpenF1SessionResult[]>(`session_result?session_key=${sessionKey}`, { timeoutMs })
   return res.ok && Array.isArray(res.data) ? res.data : []
 }
 
-export async function getOpenF1Drivers(sessionKey: number, revalidate?: number): Promise<OpenF1Driver[]> {
-  const res = await fetchOpenF1<OpenF1Driver[]>(`drivers?session_key=${sessionKey}`, { revalidate })
+export async function getOpenF1Drivers(sessionKey: number, revalidate?: number, timeoutMs?: number): Promise<OpenF1Driver[]> {
+  const res = await fetchOpenF1<OpenF1Driver[]>(`drivers?session_key=${sessionKey}`, { revalidate, timeoutMs })
   return res.ok && Array.isArray(res.data) ? res.data : []
 }
 
-export async function getOpenF1StartingGrid(sessionKey: number): Promise<OpenF1GridRow[]> {
-  const res = await fetchOpenF1<OpenF1GridRow[]>(`starting_grid?session_key=${sessionKey}`)
+export async function getOpenF1StartingGrid(sessionKey: number, timeoutMs?: number): Promise<OpenF1GridRow[]> {
+  const res = await fetchOpenF1<OpenF1GridRow[]>(`starting_grid?session_key=${sessionKey}`, { timeoutMs })
   return res.ok && Array.isArray(res.data) ? res.data : []
 }
 
