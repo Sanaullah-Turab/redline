@@ -50,7 +50,7 @@ export function RaceCalendar({
             </button>
           ))}
         </div>
-        <label className="search w-full sm:w-auto" style={{ marginBottom: 0 }}>
+        <label className="search w-full sm:w-72" style={{ marginBottom: 0 }}>
           <span className="sr-only">Search races</span>
           <input
             id="calendar-search"

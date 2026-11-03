@@ -608,7 +608,7 @@ svg {
   border: 1px solid rgb(255 255 255 / 0.09);
   border-radius: 0.5rem;
   background: rgb(16 17 22 / 0.8);
-  padding-left: 0.75rem;
+  padding: 0 0.85rem;
   margin-bottom: 0.75rem;
 }
 
@@ -616,6 +616,7 @@ svg {
   flex: 1;
   border: 0;
   background: transparent;
+  padding: 0;
 }
 
 .driver-pool {
