@@ -144,31 +144,6 @@
   font: 900 1.9rem / 1 var(--font-display);
 }
 
-.leaderboard-row {
-  position: relative;
-  transition: background 0.2s var(--ease), transform 0.2s var(--ease);
-}
-
-.leaderboard-row:hover {
-  background: var(--muted);
-  transform: translateX(4px);
-}
-
-.leaderboard-row[data-me='true'] {
-  background: linear-gradient(90deg, rgb(237 27 36 / 0.16), var(--card));
-  box-shadow: inset 3px 0 0 var(--primary);
-}
-
-.leaderboard-head,
-.leaderboard-row {
-  grid-template-columns: 70px minmax(0, 1fr) 90px 110px;
-}
-
-.leaderboard-row .hide-sm,
-.leaderboard-head .hide-sm {
-  text-align: right;
-}
-
 .profile-hero {
   display: flex;
   flex-wrap: wrap;
@@ -226,15 +201,6 @@
 }
 
 @media (max-width: 640px) {
-  .hide-sm { display: none; }
-
-  .leaderboard-head,
-  .leaderboard-row {
-    grid-template-columns: 44px minmax(0, 1fr) 72px;
-    gap: 0.5rem;
-    padding: 0.85rem 1rem;
-  }
-
   .history-row {
     grid-template-columns: 3rem minmax(0, 1fr) auto;
     gap: 0.5rem;
