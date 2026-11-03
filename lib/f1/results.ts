@@ -1,8 +1,17 @@
-import { normalizeDriverId } from '@/lib/driver-mapping'
+import { normalizeDriverId, resolveDriverId } from '@/lib/driver-mapping'
+import { getFastF1OfficialResults } from '@/lib/fastf1'
 import { getOpenF1OfficialResults } from '@/lib/openf1'
 import { api, SEASON } from './client'
 import { getSchedule } from './schedule'
 import type { OfficialResult, OfficialResultOutcome, Race, SessionType } from './types'
+
+function rowDriverId(row: any): string {
+  return (
+    normalizeDriverId(row?.Driver?.driverId) ||
+    resolveDriverId(row?.number ?? row?.Driver?.permanentNumber, row?.Driver?.code, row?.Driver?.familyName) ||
+    ''
+  )
+}
 
 function parseJolpicaClassification(rawRows: any[], type: SessionType): { result: OfficialResult | null; reason?: string } {
   if (!Array.isArray(rawRows) || rawRows.length < 10) {
@@ -26,7 +35,7 @@ function parseJolpicaClassification(rawRows: any[], type: SessionType): { result
       return { result: null, reason: 'incomplete qualifying times' }
     }
 
-    const driverId = normalizeDriverId(row?.Driver?.driverId)
+    const driverId = rowDriverId(row)
     if (!driverId) return { result: null, reason: 'incomplete result' }
     positions.push(driverId)
   }
@@ -37,7 +46,7 @@ function parseJolpicaClassification(rawRows: any[], type: SessionType): { result
 
   const driverCounts = new Map<string, number>()
   for (const r of rawRows) {
-    const id = normalizeDriverId(r?.Driver?.driverId)
+    const id = rowDriverId(r)
     if (id) driverCounts.set(id, (driverCounts.get(id) ?? 0) + 1)
   }
   if (positions.some((id) => (driverCounts.get(id) ?? 0) !== 1)) {
@@ -52,7 +61,7 @@ function parseJolpicaClassification(rawRows: any[], type: SessionType): { result
     .sort((a: any, b: any) => Number(a.position) - Number(b.position))
 
   const allClassified = Array.from(
-    new Set(sortedRows.map((r: any) => normalizeDriverId(r?.Driver?.driverId)).filter(Boolean))
+    new Set(sortedRows.map((r: any) => rowDriverId(r)).filter(Boolean))
   )
 
   return { result: { positions, allClassified } }
@@ -68,7 +77,7 @@ export async function getOfficialResults(season: number, round: number, type: Se
     let jolpicaOutcome = ''
     if (endpoint) {
       try {
-        const res = await api(endpoint)
+        const res = await api(endpoint, { timeoutMs: 4000 })
         if (!res.ok) {
           jolpicaOutcome = String(res.status || 'error')
         } else if (res.data) {
@@ -104,10 +113,14 @@ export async function getOfficialResults(season: number, round: number, type: Se
     const openF1 = await getOpenF1OfficialResults(season, round, type, event)
     if (openF1.result) return { result: openF1.result }
 
+    const fastF1 = await getFastF1OfficialResults(season, round, type)
+    if (fastF1.result) return { result: fastF1.result }
+
     const openF1Part = openF1.resolved
       ? `OpenF1 session ${openF1.sessionKey} resolved (${openF1.classifiedCount} classified)`
       : `OpenF1 session not resolved (${openF1.classifiedCount} classified)`
-    const pendingReason = `Jolpica ${jolpicaOutcome}; ${openF1Part}`
+    const fastF1Part = fastF1.resolved ? 'FastF1 incomplete' : 'FastF1 unavailable'
+    const pendingReason = `Jolpica ${jolpicaOutcome}; ${openF1Part}; ${fastF1Part}`
 
     return { result: null, pendingReason }
   } catch {

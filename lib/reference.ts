@@ -1,6 +1,7 @@
 import { getClassification, saveClassification, type ClassificationSource } from '@/lib/classifications'
 import { registerDrivers } from '@/lib/drivers/round-drivers'
 import { sessionStart, thirdPracticeStart, type Race, type ReferenceKind } from '@/lib/f1'
+import { getFastF1Reference } from '@/lib/fastf1'
 import { getOpenF1Reference } from '@/lib/openf1-reference'
 
 const PRIORITY: ClassificationSource[] = ['manual', 'openf1', 'fastf1']
@@ -22,9 +23,16 @@ function sourceReadyAt(race: Race, kind: ReferenceKind): number {
 export async function refreshReference(season: number, race: Race, kind: ReferenceKind): Promise<boolean> {
   try {
     const fetched = await getOpenF1Reference(season, race.round, kind, race)
-    if (!fetched) return false
-    await Promise.all([saveClassification(season, race.round, kind, 'openf1', fetched.positions), registerDrivers(season, race.round, fetched.drivers, 'openf1')])
-    return true
+    if (fetched) {
+      await Promise.all([saveClassification(season, race.round, kind, 'openf1', fetched.positions), registerDrivers(season, race.round, fetched.drivers, 'openf1')])
+      return true
+    }
+    const fastF1 = await getFastF1Reference(season, race.round, kind)
+    if (fastF1) {
+      await Promise.all([saveClassification(season, race.round, kind, 'fastf1', fastF1.positions), registerDrivers(season, race.round, fastF1.drivers, 'openf1')])
+      return true
+    }
+    return false
   } catch {
     return false
   }
