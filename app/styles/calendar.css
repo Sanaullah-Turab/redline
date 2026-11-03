@@ -102,21 +102,41 @@
 }
 
 .f1-cal-next-pill {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  padding: 0.26rem 0.7rem;
+  padding: 0.28rem 0.75rem;
   border-radius: 999px;
   background: #ffffff;
   color: #c10e16;
   font: 800 0.68rem var(--font-display);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: transform 0.2s var(--ease);
+  transition: color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.f1-cal-next-pill::after {
+  content: '';
+  position: absolute;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: 0.16rem;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.26s var(--ease);
 }
 
 .f1-cal-next-pill:hover {
-  transform: scale(1.04);
+  color: var(--primary);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.25);
+}
+
+.f1-cal-next-pill:hover::after {
+  transform: scaleX(1);
 }
 
 .f1-cal-body {
@@ -343,14 +363,36 @@
 }
 
 .f1-cal-unscored a {
+  position: relative;
   color: var(--foreground);
   font-weight: 600;
   font-size: 0.75rem;
   white-space: nowrap;
+  padding-bottom: 0.12rem;
+  transition: color 0.2s var(--ease);
+}
+
+.f1-cal-unscored a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 8px rgb(237 27 36 / 0.65);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.26s var(--ease);
 }
 
 .f1-cal-unscored a:hover {
   color: var(--primary);
+}
+
+.f1-cal-unscored a:hover::after {
+  transform: scaleX(1);
 }
 
 .f1-cal-footer--upcoming {
@@ -375,21 +417,50 @@
 }
 
 .f1-cal-cta {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
+  padding-bottom: 0.18rem;
   color: var(--muted-foreground);
   font: 600 0.76rem var(--font-sans);
-  transition: color 0.18s var(--ease), transform 0.18s var(--ease);
+  transition: color 0.2s var(--ease);
+}
+
+.f1-cal-cta::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 8px rgb(237 27 36 / 0.65);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.26s var(--ease);
 }
 
 .f1-cal-cta:hover {
-  color: var(--foreground);
-  transform: translateX(3px);
+  color: var(--primary);
+}
+
+.f1-cal-cta:hover::after {
+  transform: scaleX(1);
 }
 
 .f1-cal-card--next .f1-cal-cta {
-  color: rgb(255 255 255 / 0.92);
+  color: #ffffff;
+}
+
+.f1-cal-card--next .f1-cal-cta::after {
+  background: #ffffff;
+  box-shadow: 0 0 8px rgb(255 255 255 / 0.75);
+}
+
+.f1-cal-card--next .f1-cal-cta:hover {
+  color: #ffffff;
 }
 
 .f1-circuit-svg {
