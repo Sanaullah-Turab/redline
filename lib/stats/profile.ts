@@ -2,7 +2,7 @@ import { desc, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { predictions, user } from '@/lib/db/schema'
 import { SEASON } from '@/lib/f1'
-import { accuracy, getStandings } from './standings'
+import { accuracy, getStandings, rankStandings } from './standings'
 
 export type RoundPoints = { round: number; points: number }
 export type SessionBreakdown = { sessionType: string; points: number; scored: number }
@@ -45,12 +45,15 @@ export async function getProfile(id: string): Promise<Profile | null> {
     bySession.set(row.sessionType, entry)
   }
 
+  const ranked = rankStandings(standings)
+  const myRanked = ranked.find((row) => row.id === id)
+
   return {
     id: account.id,
     name: account.name,
     joined: account.joined,
-    rank: standings.findIndex((row) => row.id === id) + 1,
-    players: standings.length,
+    rank: myRanked?.rank ?? ranked.length + 1,
+    players: ranked.length,
     points,
     scored: scoredRows.length,
     picks: rows.length,
