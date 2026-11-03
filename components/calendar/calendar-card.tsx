@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ChevronRight, Zap } from 'lucide-react'
+import { ChevronRight, Flag, Zap } from 'lucide-react'
 import type { RoundPodiumEntry } from '@/lib/podiums'
 import { CircuitDecor } from './circuit-decor'
 import { CountryFlag } from './country-flag'
@@ -17,6 +17,13 @@ export type CalendarRaceItem = {
 }
 
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+
+function ordinalSuffix(pos: number): string {
+  if (pos === 1) return 'ST'
+  if (pos === 2) return 'ND'
+  if (pos === 3) return 'RD'
+  return 'TH'
+}
 
 export function formatWeekendRange(endDateStr: string, startDateStr?: string): string {
   const end = new Date(`${endDateStr}T12:00:00Z`)
@@ -76,12 +83,11 @@ export function CalendarCard({
           <Link href={href} className="f1-cal-next-pill">
             NEXT RACE <ChevronRight aria-hidden="true" />
           </Link>
-        ) : race.status === 'finished' ? (
-          <span className="f1-cal-top-date">{dateRange}</span>
         ) : (
-          <Link href={href} className="f1-cal-open-link">
-            PREDICT <ChevronRight aria-hidden="true" />
-          </Link>
+          <span className="f1-cal-top-date">
+            <Flag className="size-3 opacity-75" aria-hidden="true" />
+            {dateRange}
+          </span>
         )}
       </div>
 
@@ -108,8 +114,11 @@ export function CalendarCard({
                     data-me={isMe}
                     title={`${tile.name}: ${tile.points} pts`}
                   >
-                    <span className="f1-cal-podium-pos">{tile.position}</span>
-                    <span className="f1-cal-podium-avatar">
+                    <span className="f1-cal-podium-rank">
+                      <span className="f1-cal-podium-pos">{tile.position}</span>
+                      <small className="f1-cal-podium-ord">{ordinalSuffix(tile.position)}</small>
+                    </span>
+                    <span className="f1-cal-podium-avatar" data-pos={tile.position}>
                       {tile.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={tile.image} alt="" className="size-full object-cover" />

@@ -124,8 +124,35 @@ body {
   transition: transform 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
 }
 
+.panel:hover {
+  border-color: rgb(255 255 255 / 0.14);
+}
+
 .race-card:hover {
   box-shadow: 0 12px 32px -12px var(--accent-glow);
+}
+
+@keyframes ambient-pulse {
+  0%, 100% {
+    box-shadow: 0 16px 40px -20px rgb(237 27 36 / 0.22);
+  }
+  50% {
+    box-shadow: 0 20px 48px -16px rgb(237 27 36 / 0.42);
+  }
+}
+
+.hero-panel {
+  animation: rise 0.6s var(--ease) both, ambient-pulse 5s ease-in-out infinite;
+}
+
+.next-race {
+  transition: transform 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+.next-race:hover {
+  transform: translateY(-3px);
+  border-color: rgb(237 27 36 / 0.4);
+  box-shadow: 0 18px 42px -20px var(--accent-glow);
 }
 
 .button-primary {
