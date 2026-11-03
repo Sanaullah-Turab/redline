@@ -44,7 +44,7 @@ export function PointsPerRoundChart({ rounds, seasonGridAvg }: { rounds: MyStats
             <span><i className="swatch swatch--qual" />Qualifying</span>
             <span><i className="swatch swatch--race" />Race</span>
             {hasSprint && <span><i className="swatch swatch--sprint" />Sprint</span>}
-            <span><i className="swatch swatch--avg" />Grid avg ({avgLine})</span>
+            <span>Grid avg ({avgLine})</span>
           </div>
           {rounds.length > 10 && (
             <button type="button" className="button-secondary stats-range-btn" onClick={() => setShowAll((prev) => !prev)}>

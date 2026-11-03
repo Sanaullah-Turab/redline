@@ -395,12 +395,6 @@
   background: hsl(38, 95%, 52%);
 }
 
-.swatch--avg {
-  height: 0;
-  width: 0.9rem;
-  border-top: 2px dashed rgb(244 241 234 / 0.6);
-}
-
 .stats-range-btn {
   padding: 0.32rem 0.7rem;
   border-radius: 0.4rem;
