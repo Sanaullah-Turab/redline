@@ -1,5 +1,5 @@
 export type Driver = { id: string; code: string; number: string; givenName: string; familyName: string; nationality: string; replaces?: string }
-export type Race = { round: number; name: string; circuit: string; locality: string; country: string; date: string; time: string; qualifyingDate?: string; qualifyingTime?: string; sprintDate?: string; sprintTime?: string; sprintQualifyingDate?: string; sprintQualifyingTime?: string; thirdPracticeDate?: string; thirdPracticeTime?: string }
+export type Race = { round: number; name: string; officialName?: string; circuit: string; locality: string; country: string; date: string; time: string; qualifyingDate?: string; qualifyingTime?: string; sprintDate?: string; sprintTime?: string; sprintQualifyingDate?: string; sprintQualifyingTime?: string; thirdPracticeDate?: string; thirdPracticeTime?: string }
 export type SessionType = 'qualifying' | 'race' | 'sprint-qualifying' | 'sprint'
 export type ReferenceKind = 'practice-3' | 'grid'
 

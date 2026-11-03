@@ -30,7 +30,9 @@ export async function fetchWeekendEntries(season: number, race: Race): Promise<D
   const now = Date.now()
   const resolved = await Promise.all(WEEKEND_KINDS.map((kind) => resolveOpenF1Session(season, kind, race, race.round, sessions)))
   const started = resolved.filter((session): session is NonNullable<typeof session> => Boolean(session) && new Date(session!.date_start).getTime() <= now)
-  const lists = await Promise.all(started.map((session) => getOpenF1Drivers(session.session_key, 600)))
+  if (!started.length) return []
+  const sampleKeys = Array.from(new Set([started[0].session_key, started[started.length - 1].session_key]))
+  const lists = await Promise.all(sampleKeys.map((key) => getOpenF1Drivers(key, 600, 4000)))
   const entries = new Map<string, Driver>()
   for (const meta of lists.flat()) {
     const driver = openF1ToDriver(meta)

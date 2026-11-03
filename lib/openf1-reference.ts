@@ -27,15 +27,21 @@ function orderedIds(rows: Array<{ position: number | string | null; driver_numbe
 }
 
 export async function getOpenF1Reference(season: number, round: number, kind: ReferenceKind, race: Race): Promise<ReferenceFetch | null> {
-  const session = await resolveOpenF1Session(season, kind === 'grid' ? 'race' : 'practice-3', race, round)
+  const session = await resolveOpenF1Session(season, kind === 'grid' ? 'qualifying' : 'practice-3', race, round)
   if (!session) return null
   const sessionEnd = session.date_end ? new Date(session.date_end).getTime() : NaN
-  if (kind === 'practice-3' && (Number.isNaN(sessionEnd) || Date.now() < sessionEnd)) return null
+  if (Number.isNaN(sessionEnd) || Date.now() < sessionEnd) return null
 
-  const [rows, drivers] = await Promise.all([
+  const [primaryRows, drivers] = await Promise.all([
     kind === 'grid' ? getOpenF1StartingGrid(session.session_key, FETCH_TIMEOUT_MS) : getOpenF1SessionResults(session.session_key, FETCH_TIMEOUT_MS),
     getOpenF1Drivers(session.session_key, 600, FETCH_TIMEOUT_MS),
   ])
+  let rows = primaryRows
+  if (!rows.length && kind === 'grid') {
+    const raceSession = await resolveOpenF1Session(season, 'race', race, round)
+    if (raceSession) rows = await getOpenF1StartingGrid(raceSession.session_key, FETCH_TIMEOUT_MS)
+    if (!rows.length) rows = await getOpenF1SessionResults(session.session_key, FETCH_TIMEOUT_MS)
+  }
   if (!rows.length) return null
   const { ids, newDrivers } = orderedIds(rows, new Map(drivers.map((meta) => [Number(meta.driver_number), meta])))
   return ids.length ? { positions: ids, drivers: newDrivers } : null

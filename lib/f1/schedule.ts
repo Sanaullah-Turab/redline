@@ -1,19 +1,52 @@
 import { api, SEASON } from './client'
+import { FALLBACK_SCHEDULE_2026 } from './fallback-schedule'
 import type { Race, SessionType } from './types'
 
 const scheduleCache = new Map<number, Race[]>()
+const fallbackByRound = new Map(FALLBACK_SCHEDULE_2026.map((race) => [race.round, race]))
+
+function defaultSchedule(season: number): Race[] {
+  return scheduleCache.get(season) ?? (season === SEASON ? FALLBACK_SCHEDULE_2026 : [])
+}
 
 export async function getSchedule(season: number = SEASON): Promise<Race[]> {
+  const cached = scheduleCache.get(season)
+  if (cached) return cached
   try {
-    const res = await api(`${season}.json`, { revalidate: 600 })
+    const res = await api(`${season}.json`, { revalidate: 600, timeoutMs: 3500 })
     if (res.ok && res.data) {
-      const races = (res.data.MRData?.RaceTable?.Races ?? []).map((r: any) => ({ round: Number(r.round), name: r.raceName, circuit: r.Circuit.circuitName, locality: r.Circuit.Location.locality, country: r.Circuit.Location.country, date: r.date, time: r.time ?? '00:00:00Z', qualifyingDate: r.Qualifying?.date, qualifyingTime: r.Qualifying?.time, sprintDate: r.Sprint?.date, sprintTime: r.Sprint?.time, sprintQualifyingDate: r.SprintQualifying?.date, sprintQualifyingTime: r.SprintQualifying?.time, thirdPracticeDate: r.ThirdPractice?.date, thirdPracticeTime: r.ThirdPractice?.time }))
-      if (races.length > 0) scheduleCache.set(season, races)
-      return races
+      const races: Race[] = (res.data.MRData?.RaceTable?.Races ?? []).map((r: any) => {
+        const round = Number(r.round)
+        const fb = season === SEASON ? fallbackByRound.get(round) : undefined
+        return {
+          round,
+          name: r.raceName || fb?.name || `Round ${round}`,
+          officialName: fb?.officialName,
+          circuit: r.Circuit?.circuitName || fb?.circuit || '',
+          locality: r.Circuit?.Location?.locality || fb?.locality || '',
+          country: r.Circuit?.Location?.country || fb?.country || '',
+          date: r.date || fb?.date || '',
+          time: r.time ?? fb?.time ?? '00:00:00Z',
+          qualifyingDate: r.Qualifying?.date ?? fb?.qualifyingDate,
+          qualifyingTime: r.Qualifying?.time ?? fb?.qualifyingTime,
+          sprintDate: r.Sprint?.date ?? fb?.sprintDate,
+          sprintTime: r.Sprint?.time ?? fb?.sprintTime,
+          sprintQualifyingDate: r.SprintQualifying?.date ?? fb?.sprintQualifyingDate,
+          sprintQualifyingTime: r.SprintQualifying?.time ?? fb?.sprintQualifyingTime,
+          thirdPracticeDate: r.ThirdPractice?.date ?? fb?.thirdPracticeDate,
+          thirdPracticeTime: r.ThirdPractice?.time ?? fb?.thirdPracticeTime,
+        }
+      })
+      if (races.length > 0) {
+        scheduleCache.set(season, races)
+        return races
+      }
     }
-    return scheduleCache.get(season) ?? []
+    const fallback = defaultSchedule(season)
+    if (fallback.length > 0) scheduleCache.set(season, fallback)
+    return fallback
   } catch {
-    return scheduleCache.get(season) ?? []
+    return defaultSchedule(season)
   }
 }
 
