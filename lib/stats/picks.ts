@@ -1,9 +1,7 @@
-import { and, desc, eq } from 'drizzle-orm'
-import { db } from '@/lib/db'
-import { eventResults, predictions } from '@/lib/db/schema'
 import { areDriversEquivalent, normalizeDriverId } from '@/lib/driver-mapping'
 import { getDriverCatalog } from '@/lib/drivers/round-drivers'
 import { formatRaceWeekend, getSchedule, isSprint, SEASON, sessionLabel, type Driver, type SessionType } from '@/lib/f1'
+import { getSeasonEventResults, getSeasonPredictions } from './my-stats'
 
 const SESSION_SORT: Record<string, number> = {
   'sprint-qualifying': 1,
@@ -72,16 +70,15 @@ function describeDriver(id: string, catalog: Map<string, Driver>) {
 }
 
 export async function getUserWeekendPicks(userId: string): Promise<WeekendPicksGroup[]> {
-  const [userPreds, allResults, schedule, catalog] = await Promise.all([
-    db
-      .select()
-      .from(predictions)
-      .where(and(eq(predictions.userId, userId), eq(predictions.season, SEASON)))
-      .orderBy(desc(predictions.round)),
-    db.select().from(eventResults).where(eq(eventResults.season, SEASON)),
+  const [allPreds, allResults, schedule, catalog] = await Promise.all([
+    getSeasonPredictions(),
+    getSeasonEventResults(),
     getSchedule(SEASON),
     getDriverCatalog(SEASON),
   ])
+  const userPreds = allPreds
+    .filter((row) => row.userId === userId)
+    .sort((a, b) => b.round - a.round)
 
   const resultsMap = new Map<string, string[]>()
   for (const res of allResults) {

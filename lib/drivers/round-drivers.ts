@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { and, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { roundDrivers } from '@/lib/db/schema'
@@ -27,12 +28,12 @@ export async function getRoundDrivers(season: number, round: number): Promise<Dr
   return mergeRoundDrivers(await getRoundDriverRows(season, round))
 }
 
-export async function getDriverCatalog(season: number): Promise<Map<string, Driver>> {
+export const getDriverCatalog = cache(async (season: number): Promise<Map<string, Driver>> => {
   const rows = await db.select().from(roundDrivers).where(eq(roundDrivers.season, season))
   const catalog = new Map(BASE_DRIVERS.map((driver) => [driver.id, driver]))
   for (const row of rows) if (!catalog.has(row.driverId)) catalog.set(row.driverId, toDriver(row))
   return catalog
-}
+})
 
 export async function registerDrivers(season: number, round: number, drivers: Driver[], source: RoundDriverRow['source']) {
   const baseIds = new Set(BASE_DRIVERS.map((driver) => driver.id))

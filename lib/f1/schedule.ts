@@ -2,18 +2,20 @@ import { api, SEASON } from './client'
 import { FALLBACK_SCHEDULE_2026 } from './fallback-schedule'
 import type { Race, SessionType } from './types'
 
-const scheduleCache = new Map<number, Race[]>()
+const scheduleCache = new Map<number, { races: Race[]; expiresAt: number }>()
+const inFlightSchedule = new Map<number, Promise<Race[]>>()
 const fallbackByRound = new Map(FALLBACK_SCHEDULE_2026.map((race) => [race.round, race]))
 
+const LIVE_TTL_MS = 30 * 60 * 1000
+const FALLBACK_TTL_MS = 5 * 60 * 1000
+
 function defaultSchedule(season: number): Race[] {
-  return scheduleCache.get(season) ?? (season === SEASON ? FALLBACK_SCHEDULE_2026 : [])
+  return scheduleCache.get(season)?.races ?? (season === SEASON ? FALLBACK_SCHEDULE_2026 : [])
 }
 
-export async function getSchedule(season: number = SEASON): Promise<Race[]> {
-  const cached = scheduleCache.get(season)
-  if (cached) return cached
+async function fetchScheduleInternal(season: number): Promise<Race[]> {
   try {
-    const res = await api(`${season}.json`, { revalidate: 600, timeoutMs: 3500 })
+    const res = await api(`${season}.json`, { revalidate: 600, timeoutMs: 2500 })
     if (res.ok && res.data) {
       const races: Race[] = (res.data.MRData?.RaceTable?.Races ?? []).map((r: any) => {
         const round = Number(r.round)
@@ -38,16 +40,32 @@ export async function getSchedule(season: number = SEASON): Promise<Race[]> {
         }
       })
       if (races.length > 0) {
-        scheduleCache.set(season, races)
+        scheduleCache.set(season, { races, expiresAt: Date.now() + LIVE_TTL_MS })
         return races
       }
     }
-    const fallback = defaultSchedule(season)
-    if (fallback.length > 0) scheduleCache.set(season, fallback)
-    return fallback
   } catch {
-    return defaultSchedule(season)
+    // Fall through to fallback schedule
   }
+  const fallback = defaultSchedule(season)
+  if (fallback.length > 0) {
+    scheduleCache.set(season, { races: fallback, expiresAt: Date.now() + FALLBACK_TTL_MS })
+  }
+  return fallback
+}
+
+export async function getSchedule(season: number = SEASON): Promise<Race[]> {
+  const cached = scheduleCache.get(season)
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.races
+  }
+  const existing = inFlightSchedule.get(season)
+  if (existing) return existing
+  const promise = fetchScheduleInternal(season).finally(() => {
+    inFlightSchedule.delete(season)
+  })
+  inFlightSchedule.set(season, promise)
+  return promise
 }
 
 export function isSprint(race: Race): boolean {

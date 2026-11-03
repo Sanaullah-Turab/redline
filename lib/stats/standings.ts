@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { predictions, user } from '@/lib/db/schema'
@@ -7,7 +8,7 @@ export const MAX_POINTS_PER_SESSION = 10
 
 export type Standing = { id: string; name: string; points: number; scored: number; picks: number; best: number; accuracy: number }
 
-export async function getStandings(): Promise<Standing[]> {
+export const getStandings = cache(async (): Promise<Standing[]> => {
   const rows = await db
     .select({
       id: user.id,
@@ -22,7 +23,7 @@ export async function getStandings(): Promise<Standing[]> {
     .groupBy(user.id, user.name)
     .orderBy(desc(sql`coalesce(sum(${predictions.points}), 0)`), user.name)
   return rows.map((row) => ({ ...row, accuracy: accuracy(row.points, row.scored) }))
-}
+})
 
 export type RankedStanding = Standing & { rank: number; gap: number; isLeader: boolean }
 

@@ -1,6 +1,15 @@
+import { cache } from 'react'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { eventResults, predictions } from '@/lib/db/schema'
+
+export const getSeasonPredictions = cache(async () => {
+  return db.select().from(predictions).where(eq(predictions.season, SEASON))
+})
+
+export const getSeasonEventResults = cache(async () => {
+  return db.select().from(eventResults).where(eq(eventResults.season, SEASON))
+})
 import { areDriversEquivalent, normalizeDriverId } from '@/lib/driver-mapping'
 import { getDriverCatalog } from '@/lib/drivers/round-drivers'
 import { getSchedule, SEASON, sessionLabel, type Driver, type SessionType } from '@/lib/f1'
@@ -130,8 +139,8 @@ export async function getMyStats(userId: string): Promise<MyStatsData | null> {
   const [standings, schedule, allPreds, allResults, catalog] = await Promise.all([
     getStandings(),
     getSchedule(SEASON),
-    db.select().from(predictions).where(eq(predictions.season, SEASON)),
-    db.select().from(eventResults).where(eq(eventResults.season, SEASON)),
+    getSeasonPredictions(),
+    getSeasonEventResults(),
     getDriverCatalog(SEASON),
   ])
 
