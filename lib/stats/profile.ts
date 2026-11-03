@@ -1,32 +1,8 @@
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { predictions, user } from '@/lib/db/schema'
 import { SEASON } from '@/lib/f1'
-
-export const MAX_POINTS_PER_SESSION = 10
-
-export type Standing = { id: string; name: string; points: number; scored: number; picks: number; best: number; accuracy: number }
-
-export async function getStandings(): Promise<Standing[]> {
-  const rows = await db
-    .select({
-      id: user.id,
-      name: user.name,
-      points: sql<number>`coalesce(sum(${predictions.points}), 0)::int`,
-      scored: sql<number>`count(*) filter (where ${predictions.scored})::int`,
-      picks: sql<number>`count(${predictions.id})::int`,
-      best: sql<number>`coalesce(max(${predictions.points}), 0)::int`,
-    })
-    .from(user)
-    .leftJoin(predictions, and(eq(user.id, predictions.userId), eq(predictions.season, SEASON)))
-    .groupBy(user.id, user.name)
-    .orderBy(desc(sql`coalesce(sum(${predictions.points}), 0)`), user.name)
-  return rows.map((row) => ({ ...row, accuracy: accuracy(row.points, row.scored) }))
-}
-
-export function accuracy(points: number, scored: number) {
-  return scored ? Math.round((points / (scored * MAX_POINTS_PER_SESSION)) * 100) : 0
-}
+import { accuracy, getStandings } from './standings'
 
 export type RoundPoints = { round: number; points: number }
 export type SessionBreakdown = { sessionType: string; points: number; scored: number }
@@ -85,17 +61,4 @@ export async function getProfile(id: string): Promise<Profile | null> {
     sessions: [...bySession.values()],
     history: rows.map(({ round, sessionType, points: pts, scored, positions }) => ({ round, sessionType, points: pts, scored, positions })),
   }
-}
-
-export async function getRoundTotals(): Promise<{ round: number; points: number; entries: number }[]> {
-  return db
-    .select({
-      round: predictions.round,
-      points: sql<number>`coalesce(sum(${predictions.points}), 0)::int`,
-      entries: sql<number>`count(*)::int`,
-    })
-    .from(predictions)
-    .where(eq(predictions.season, SEASON))
-    .groupBy(predictions.round)
-    .orderBy(predictions.round)
 }
