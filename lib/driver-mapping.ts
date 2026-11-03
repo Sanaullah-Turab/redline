@@ -98,6 +98,15 @@ export function mapOpenF1Driver(driverNumber: number | string | null | undefined
   return null
 }
 
+export function deriveDriverId(lastName: string | null | undefined): string {
+  if (typeof lastName !== 'string') return ''
+  return lastName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+}
+
+export function resolveDriverId(driverNumber: number | string | null | undefined, code?: string | null, lastName?: string | null): string | null {
+  return mapOpenF1Driver(driverNumber, code) ?? (deriveDriverId(lastName) || null)
+}
+
 export function areDriversEquivalent(a: unknown, b: unknown): boolean {
   const normA = normalizeDriverId(a)
   const normB = normalizeDriverId(b)
