@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Crown, Trophy } from 'lucide-react'
+import { Trophy } from 'lucide-react'
 import type { RankedStanding } from '@/lib/stats'
 
 function formatGap(row: RankedStanding): string {
@@ -45,15 +45,14 @@ export function LeaderboardTable({ rows, meId }: { rows: RankedStanding[]; meId?
                 <span className="lb-rank">{row.rank}</span>
                 <span className="lb-player">
                   <span className="lb-name">
-                    {row.isLeader && <Crown className="lb-crown" aria-label="Leader" />}
                     <b>{row.name}</b>
                     {row.id === meId && (
-                      <span className="pill" data-tone="live">
+                      <span className="pill lb-you-pill" data-tone="live">
                         YOU
                       </span>
                     )}
                   </span>
-                  <small>
+                  <small className="lb-sessions">
                     {row.scored} scored {row.scored === 1 ? 'session' : 'sessions'}
                   </small>
                 </span>

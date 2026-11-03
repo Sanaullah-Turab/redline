@@ -17,10 +17,10 @@ export function Podium({ rows }: { rows: RankedStanding[] }) {
             data-place={row.rank}
             style={{ '--i': index + 1 } as React.CSSProperties}
           >
-            <span className="place">{row.rank}</span>
+            <span className="place">P{row.rank}</span>
             <b>{row.name}</b>
-            <strong>{row.points} <small>pts</small></strong>
-            <span className="podium-sub">{row.accuracy}% accuracy</span>
+            <strong>{row.points}</strong>
+            <small className="text-muted-foreground">{row.accuracy}% accuracy</small>
           </Link>
         )
       })}
