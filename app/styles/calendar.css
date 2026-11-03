@@ -1,0 +1,383 @@
+.f1-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+
+.f1-cal-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.35rem;
+  min-height: 17.5rem;
+  min-width: 0;
+  padding: 1.25rem 1.3rem;
+  background: linear-gradient(165deg, #181920 0%, #121318 100%);
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  overflow: hidden;
+  transition: transform 0.24s var(--ease), border-color 0.24s var(--ease), box-shadow 0.24s var(--ease);
+}
+
+.f1-cal-card:hover {
+  transform: translateY(-4px);
+  border-color: rgb(237 27 36 / 0.65);
+  box-shadow: 0 18px 36px -20px rgb(0 0 0 / 0.75), 0 0 24px -12px var(--accent-glow);
+}
+
+.f1-cal-card--next {
+  background: linear-gradient(145deg, #ed1b24 0%, #c81018 65%, #9e0b12 100%);
+  border-color: #ff5b62;
+  color: #ffffff;
+  box-shadow: 0 18px 40px -18px rgb(237 27 36 / 0.55);
+}
+
+.f1-cal-card--next:hover {
+  border-color: #ffffff;
+  box-shadow: 0 22px 44px -16px rgb(237 27 36 / 0.72);
+}
+
+.f1-cal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.f1-cal-round {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted-foreground);
+  font: 900 0.76rem var(--font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.f1-cal-card--next .f1-cal-round {
+  color: rgb(255 255 255 / 0.9);
+}
+
+.f1-cal-sprint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  padding: 0.14rem 0.45rem;
+  border-radius: 0.2rem;
+  background: hsl(38, 95%, 52%);
+  color: #0b0b0d;
+  font: 900 0.65rem var(--font-display);
+  letter-spacing: 0.08em;
+}
+
+.f1-cal-top-date {
+  color: var(--muted-foreground);
+  font: 800 0.76rem var(--font-display);
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+}
+
+.f1-cal-next-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgb(11 11 13 / 0.28);
+  border: 1px solid rgb(255 255 255 / 0.38);
+  color: #ffffff;
+  font: 900 0.72rem var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.f1-cal-open-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  color: var(--muted-foreground);
+  font: 800 0.72rem var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.18s var(--ease);
+}
+
+.f1-cal-open-link:hover {
+  color: var(--primary);
+}
+
+.f1-cal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.f1-cal-country-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.f1-country-flag {
+  display: inline-flex;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1.5px solid rgb(255 255 255 / 0.28);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+}
+
+.f1-cal-country {
+  font: italic 900 1.95rem / 1 var(--font-display);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.f1-cal-official {
+  color: var(--muted-foreground);
+  font: 700 0.72rem / 1.35 var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.f1-cal-card--next .f1-cal-official {
+  color: rgb(255 255 255 / 0.88);
+}
+
+.f1-cal-circuit {
+  color: rgb(164 164 173 / 0.72);
+  font-size: 0.74rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.f1-cal-card--next .f1-cal-circuit {
+  color: rgb(255 255 255 / 0.75);
+}
+
+.f1-cal-footer {
+  margin-top: auto;
+}
+
+.f1-cal-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.f1-cal-podium[data-count='1'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.f1-cal-podium[data-count='2'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.f1-cal-podium-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  min-width: 0;
+  padding: 0.5rem 0.55rem;
+  border-radius: 0.38rem;
+  background: rgb(255 255 255 / 0.04);
+  border: 1px solid rgb(255 255 255 / 0.09);
+  border-top: 2px solid rgb(255 255 255 / 0.22);
+  transition: transform 0.16s var(--ease), border-color 0.16s var(--ease), background-color 0.16s var(--ease);
+}
+
+.f1-cal-podium-tile:hover {
+  transform: translateY(-2px);
+  background: rgb(255 255 255 / 0.07);
+  border-color: rgb(255 255 255 / 0.28);
+}
+
+.f1-cal-podium-tile[data-pos='1'] {
+  border-top-color: var(--gold);
+}
+
+.f1-cal-podium-tile[data-pos='2'] {
+  border-top-color: var(--silver);
+}
+
+.f1-cal-podium-tile[data-pos='3'] {
+  border-top-color: var(--bronze);
+}
+
+.f1-cal-podium-tile[data-me='true'] {
+  background: linear-gradient(160deg, rgb(237 27 36 / 0.22), rgb(245 196 81 / 0.1));
+  border-color: rgb(237 27 36 / 0.65);
+  box-shadow: inset 0 0 12px rgb(237 27 36 / 0.18);
+}
+
+.f1-cal-podium-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.f1-cal-podium-pos {
+  font: italic 900 0.95rem / 1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+.f1-cal-podium-tile[data-pos='1'] .f1-cal-podium-pos {
+  color: var(--gold);
+}
+
+.f1-cal-podium-tile[data-pos='2'] .f1-cal-podium-pos {
+  color: var(--silver);
+}
+
+.f1-cal-podium-tile[data-pos='3'] .f1-cal-podium-pos {
+  color: var(--bronze);
+}
+
+.f1-cal-podium-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--muted);
+  color: var(--foreground);
+  font: 900 0.65rem var(--font-display);
+}
+
+.f1-cal-podium-tile[data-me='true'] .f1-cal-podium-avatar {
+  background: var(--primary);
+  color: #fff;
+}
+
+.f1-cal-you {
+  margin-left: auto;
+  padding: 0.06rem 0.28rem;
+  border-radius: 0.18rem;
+  background: var(--primary);
+  color: #fff;
+  font: 900 0.54rem var(--font-display);
+  letter-spacing: 0.08em;
+}
+
+.f1-cal-podium-name {
+  font: 900 0.78rem / 1.15 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.f1-cal-podium-pts {
+  color: var(--muted-foreground);
+  font: 800 0.68rem var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.f1-cal-podium-tile[data-me='true'] .f1-cal-podium-pts {
+  color: #ffd778;
+}
+
+.f1-cal-unscored {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.38rem;
+  background: rgb(255 255 255 / 0.03);
+  border: 1px dashed rgb(255 255 255 / 0.14);
+  color: var(--muted-foreground);
+  font: 700 0.72rem var(--font-display);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.f1-cal-unscored a {
+  color: var(--primary);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.f1-cal-unscored a:hover {
+  text-decoration: underline;
+}
+
+.f1-cal-footer--upcoming {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.35rem;
+}
+
+.f1-cal-date-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.f1-cal-bottom-date {
+  font: italic 900 1.25rem / 1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.f1-cal-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--primary);
+  font: 800 0.76rem var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.f1-cal-card--next .f1-cal-cta {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.f1-circuit-svg {
+  width: 6.4rem;
+  height: 3.9rem;
+  flex-shrink: 0;
+  color: var(--foreground);
+}
+
+.f1-cal-card--next .f1-circuit-svg {
+  color: #ffffff;
+}
+
+.f1-cal-card--next .f1-circuit-svg path:last-child {
+  stroke: #ffffff;
+}
+
+@media (max-width: 1024px) {
+  .f1-calendar-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .f1-calendar-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

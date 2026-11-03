@@ -1,25 +1,35 @@
 'use client'
-import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { ArrowRight, LockKeyhole, Zap } from 'lucide-react'
-import { formatRaceWeekend } from '@/lib/f1'
+import { CalendarCard, type CalendarRaceItem } from '@/components/calendar/calendar-card'
 
-export type CalendarRace = { round: number; name: string; country: string; circuit: string; date: string; sprint: boolean; past: boolean }
+export type { CalendarRaceItem as CalendarRace }
 
 const filters = ['all', 'upcoming', 'completed', 'sprint'] as const
 type Filter = (typeof filters)[number]
 
-export function RaceCalendar({ races, signedIn }: { races: CalendarRace[]; signedIn: boolean }) {
+export function RaceCalendar({
+  races,
+  signedIn,
+  meId,
+}: {
+  races: CalendarRaceItem[]
+  signedIn: boolean
+  meId?: string
+}) {
   const [filter, setFilter] = useState<Filter>('all')
   const [query, setQuery] = useState('')
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
     return races.filter((race) => {
-      if (filter === 'upcoming' && race.past) return false
-      if (filter === 'completed' && !race.past) return false
+      if (filter === 'upcoming' && race.status === 'finished') return false
+      if (filter === 'completed' && race.status !== 'finished') return false
       if (filter === 'sprint' && !race.sprint) return false
-      return !q || `${race.name} ${race.country} ${race.circuit}`.toLowerCase().includes(q)
+      if (!q) return true
+      const podiumNames = race.podium.map((tile) => tile.name).join(' ')
+      return `${race.name} ${race.officialName} ${race.country} ${race.circuit} ${podiumNames}`
+        .toLowerCase()
+        .includes(q)
     })
   }, [races, filter, query])
 
@@ -28,34 +38,43 @@ export function RaceCalendar({ races, signedIn }: { races: CalendarRace[]; signe
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="session-tabs w-full sm:w-auto" role="tablist" aria-label="Filter races">
           {filters.map((f) => (
-            <button key={f} role="tab" aria-selected={filter === f} onClick={() => setFilter(f)} className="capitalize">{f}</button>
+            <button
+              key={f}
+              type="button"
+              role="tab"
+              aria-selected={filter === f}
+              onClick={() => setFilter(f)}
+              className="capitalize"
+            >
+              {f}
+            </button>
           ))}
         </div>
         <label className="search w-full sm:w-auto" style={{ marginBottom: 0 }}>
           <span className="sr-only">Search races</span>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search race or country" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search race, country, or winner"
+          />
         </label>
       </div>
       {visible.length ? (
-        <div className="race-grid">
+        <div className="f1-calendar-grid">
           {visible.map((race, index) => (
-            <article key={race.round} className={`race-card rise${race.sprint ? ' race-card--sprint' : ''}`} style={{ '--i': Math.min(index, 9) } as React.CSSProperties}>
-              <div className="flex items-center justify-between">
-                <span className="round">R{String(race.round).padStart(2, '0')}</span>
-                {race.past ? <span className="state"><LockKeyhole /> Closed</span> : <span className="state open">Open</span>}
-              </div>
-              <div>
-                <p className="eyebrow">{race.country.toUpperCase()}{race.sprint && <span className="sprint-badge"><Zap aria-hidden="true" />SPRINT</span>}</p>
-                <h3>{race.name}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{race.circuit}</p>
-              </div>
-              <p>{formatRaceWeekend(race.date)}</p>
-              {!race.past && <Link href={signedIn ? `/predict/${race.round}` : '/sign-in'}>Make picks <ArrowRight /></Link>}
-            </article>
+            <CalendarCard
+              key={race.round}
+              race={race}
+              index={index}
+              signedIn={signedIn}
+              meId={meId}
+            />
           ))}
         </div>
       ) : (
-        <div className="empty-grid"><p>No races match your filters.</p></div>
+        <div className="empty-grid">
+          <p>No races match your filters.</p>
+        </div>
       )}
     </div>
   )

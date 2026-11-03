@@ -5,6 +5,7 @@ import { predictions, roundPodiums, user } from '@/lib/db/schema'
 export type RoundPodiumEntry = {
   userId: string
   name: string
+  image: string | null
   points: number
   position: number
 }
@@ -50,6 +51,7 @@ export async function getSeasonRoundPodiums(season: number): Promise<Map<number,
       round: roundPodiums.round,
       userId: roundPodiums.userId,
       name: user.name,
+      image: user.image,
       points: roundPodiums.points,
       position: roundPodiums.position,
     })
@@ -62,7 +64,7 @@ export async function getSeasonRoundPodiums(season: number): Promise<Map<number,
   for (const row of rows) {
     const list = byRound.get(row.round) ?? []
     if (list.length < 3) {
-      list.push({ userId: row.userId, name: row.name, points: row.points, position: row.position })
+      list.push({ userId: row.userId, name: row.name, image: row.image, points: row.points, position: row.position })
       byRound.set(row.round, list)
     }
   }
