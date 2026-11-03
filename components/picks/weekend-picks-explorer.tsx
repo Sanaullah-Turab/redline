@@ -1,14 +1,14 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { ArrowRight, CheckCircle2, Clock, History, Sparkles, Zap } from 'lucide-react'
+import { ArrowRight, History, Zap } from 'lucide-react'
 import type { SessionType } from '@/lib/f1'
 import type { WeekendPicksGroup, WeekendSessionPicks } from '@/lib/stats'
 
 type SessionFilter = 'all' | SessionType
 
 const SESSION_FILTERS: { id: SessionFilter; label: string }[] = [
-  { id: 'all', label: 'All sessions' },
+  { id: 'all', label: 'All' },
   { id: 'race', label: 'Race' },
   { id: 'qualifying', label: 'Qualifying' },
   { id: 'sprint', label: 'Sprint' },
@@ -18,15 +18,17 @@ const SESSION_FILTERS: { id: SessionFilter; label: string }[] = [
 export function WeekendPicksExplorer({
   weekends,
   focusedRound = null,
-  heading = 'Weekend picks archive',
-  eyebrow = 'SESSION BY SESSION TELEMETRY',
+  heading = 'Weekend Picks',
+  eyebrow = 'PREDICTION ARCHIVE',
 }: {
   weekends: WeekendPicksGroup[]
   focusedRound?: number | null
   heading?: string
   eyebrow?: string
 }) {
-  const [selectedRound, setSelectedRound] = useState<number | 'all'>(focusedRound ?? (weekends[0]?.round ?? 'all'))
+  const [selectedRound, setSelectedRound] = useState<number | 'all'>(
+    focusedRound ?? (weekends[0]?.round ?? 'all')
+  )
   const [sessionFilter, setSessionFilter] = useState<SessionFilter>('all')
 
   useEffect(() => {
@@ -47,7 +49,9 @@ export function WeekendPicksExplorer({
         <div className="empty-grid">
           <History />
           <p>No predictions submitted yet. Lock in your top 10 for the next Grand Prix weekend.</p>
-          <Link href="/calendar" className="button-primary">Browse calendar <ArrowRight /></Link>
+          <Link href="/calendar" className="button-primary">
+            Browse calendar <ArrowRight />
+          </Link>
         </div>
       </div>
     )
@@ -57,7 +61,9 @@ export function WeekendPicksExplorer({
     .filter((weekend) => selectedRound === 'all' || weekend.round === selectedRound)
     .map((weekend) => ({
       ...weekend,
-      sessions: weekend.sessions.filter((session) => sessionFilter === 'all' || session.sessionType === sessionFilter),
+      sessions: weekend.sessions.filter(
+        (session) => sessionFilter === 'all' || session.sessionType === sessionFilter
+      ),
     }))
     .filter((weekend) => weekend.sessions.length > 0)
 
@@ -66,14 +72,22 @@ export function WeekendPicksExplorer({
       <div className="picks-explorer-head">
         <div>
           <p className="eyebrow">{eyebrow}</p>
-          <h2 className="font-mono text-3xl font-black uppercase italic md:text-4xl">{heading}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Inspect every Qualifying, Race, Sprint Qualifying, and Sprint prediction with exact hits highlighted.
-          </p>
+          <h2 className="picks-explorer-title">{heading}</h2>
         </div>
-        <div className="picks-legend">
-          <span className="picks-legend-item" data-tone="exact"><CheckCircle2 /> Exact position (+1 pt)</span>
-          <span className="picks-legend-item" data-tone="near"><Sparkles /> Top 10 finish (0 pts)</span>
+
+        <div className="picks-legend" aria-label="Prediction status colour legend">
+          <span className="picks-legend-item">
+            <i className="legend-dot legend-dot--exact" aria-hidden="true" />
+            Exact position (+1 pt)
+          </span>
+          <span className="picks-legend-item">
+            <i className="legend-dot legend-dot--near" aria-hidden="true" />
+            In Top 10
+          </span>
+          <span className="picks-legend-item">
+            <i className="legend-dot legend-dot--miss" aria-hidden="true" />
+            Outside Top 10
+          </span>
         </div>
       </div>
 
@@ -86,7 +100,7 @@ export function WeekendPicksExplorer({
             className="picks-round-pill"
             onClick={() => setSelectedRound('all')}
           >
-            <span>All weekends</span>
+            <span>All</span>
             <small>{weekends.length}</small>
           </button>
           {weekends.map((weekend) => (
@@ -99,10 +113,14 @@ export function WeekendPicksExplorer({
               onClick={() => setSelectedRound(weekend.round)}
             >
               <span>
-                R{String(weekend.round).padStart(2, '0')}
-                {weekend.isSprintWeekend && <Zap className="inline size-3 text-amber-400 ml-1" aria-label="Sprint weekend" />}
+                R{weekend.round}
+                {weekend.isSprintWeekend && (
+                  <Zap className="inline size-3 text-amber-400 ml-1" aria-label="Sprint weekend" />
+                )}
               </span>
-              <small>{weekend.scoredSessionsCount > 0 ? `${weekend.totalPoints} pts` : 'Pending'}</small>
+              <small>
+                {weekend.scoredSessionsCount > 0 ? `${weekend.totalPoints} pts` : 'Pending'}
+              </small>
             </button>
           ))}
         </div>
@@ -124,32 +142,43 @@ export function WeekendPicksExplorer({
       </div>
 
       {visibleWeekends.length ? (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
           {visibleWeekends.map((weekend) => (
             <article key={weekend.round} className="weekend-picks-card rise">
               <header className="weekend-picks-header">
-                <div>
-                  <p className="eyebrow">
-                    ROUND {String(weekend.round).padStart(2, '0')} · {weekend.country.toUpperCase()}
+                <div className="min-w-0">
+                  <div className="weekend-picks-meta">
+                    <span>ROUND {weekend.round}</span>
+                    <span>·</span>
+                    <span>{weekend.country}</span>
+                    <span>·</span>
+                    <span>{weekend.dateLabel}</span>
                     {weekend.isSprintWeekend && (
-                      <span className="sprint-badge"><Zap aria-hidden="true" />SPRINT</span>
+                      <span className="f1-cal-sprint">
+                        <Zap aria-hidden="true" /> SPRINT
+                      </span>
                     )}
-                  </p>
+                  </div>
                   <h3>{weekend.raceName}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{weekend.circuit} · {weekend.dateLabel}</p>
                 </div>
                 <div className="weekend-picks-score">
-                  <span>WEEKEND SCORE</span>
+                  <span>Weekend Score</span>
                   <strong>
                     {weekend.totalPoints}
-                    {weekend.maxPossiblePoints > 0 && <small> / {weekend.maxPossiblePoints} pts</small>}
+                    {weekend.maxPossiblePoints > 0 && (
+                      <small> / {weekend.maxPossiblePoints}</small>
+                    )}
                   </strong>
                 </div>
               </header>
 
               <div className="weekend-sessions-grid">
                 {weekend.sessions.map((session) => (
-                  <SessionPicksCard key={session.sessionType} round={weekend.round} session={session} />
+                  <SessionPicksCard
+                    key={session.sessionType}
+                    round={weekend.round}
+                    session={session}
+                  />
                 ))}
               </div>
             </article>
@@ -168,19 +197,21 @@ function SessionPicksCard({ round, session }: { round: number; session: WeekendS
   return (
     <div className="session-picks-panel" data-sprint={session.isSprint}>
       <div className="session-picks-head">
-        <div className="flex items-center gap-2">
-          {session.isSprint && <Zap className="size-4 text-amber-400" aria-hidden="true" />}
+        <div className="session-picks-title">
+          {session.isSprint && <Zap className="size-3.5 text-amber-400" aria-hidden="true" />}
           <h4>{session.sessionName}</h4>
-          <span className="pill" data-tone={session.scored ? 'scored' : 'live'}>
+          <span className="session-status-dot" data-scored={session.scored}>
             {session.scored ? 'Scored' : 'Pending'}
           </span>
         </div>
         <div className="session-picks-pts">
           {session.scored ? (
-            <strong>{session.points} <span>/ 10 pts</span></strong>
+            <strong>
+              {session.points} <span>/ 10 pts</span>
+            </strong>
           ) : (
-            <Link href={`/predict/${round}`} className="text-xs font-bold text-primary hover:underline">
-              Edit / View
+            <Link href={`/predict/${round}`} className="session-edit-link">
+              Edit picks
             </Link>
           )}
         </div>
@@ -198,36 +229,12 @@ function SessionPicksCard({ round, session }: { round: number; session: WeekendS
           return (
             <li key={row.position} className="pick-row" data-state={state}>
               <span className="pick-pos">P{row.position}</span>
-              <span className="pick-num">{row.predictedNumber}</span>
+              <span className="pick-code">{row.predictedCode}</span>
               <span className="pick-driver">
-                <b>
-                  <span className="pick-code">{row.predictedCode}</span>
-                  <span>{row.predictedName}</span>
-                </b>
-                {row.isReplacement && <small className="text-amber-400">Replacement</small>}
+                <b>{row.predictedName}</b>
+                {row.isReplacement && <small className="pick-reserve">Reserve</small>}
               </span>
-              <span className="pick-outcome">
-                {state === 'exact' && (
-                  <span className="pick-badge pick-badge--exact">
-                    <CheckCircle2 aria-hidden="true" /> +1 PT
-                  </span>
-                )}
-                {state === 'near' && (
-                  <span className="pick-badge pick-badge--near" title={`Finished P${row.finishedPosition}; actual P${row.position} was ${row.actualName ?? row.actualCode}`}>
-                    P{row.finishedPosition} finish · Act: {row.actualCode}
-                  </span>
-                )}
-                {state === 'miss' && (
-                  <span className="pick-badge pick-badge--miss" title={row.actualName ? `Actual P${row.position}: ${row.actualName}` : undefined}>
-                    {row.actualCode ? `Act: ${row.actualCode}` : 'Miss'}
-                  </span>
-                )}
-                {state === 'pending' && (
-                  <span className="pick-badge pick-badge--pending">
-                    <Clock aria-hidden="true" /> Picked
-                  </span>
-                )}
-              </span>
+              <span className="pick-state-dot" aria-hidden="true" />
             </li>
           )
         })}

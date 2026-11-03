@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChevronRight, LogOut, Menu, UserRound, X } from 'lucide-react'
+import { ArrowUpRight, LogOut, Menu, X } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { isActive, navItemsFor } from './nav-items'
 
@@ -71,24 +71,32 @@ export function MobileMenu({ user, isAdmin = false }: MobileMenuProps) {
           />
           <div className="mobile-drawer" role="dialog" aria-modal="true" aria-label="Mobile Navigation">
             <div className="mobile-drawer-body">
-              <div className="flex items-center justify-between border-b border-border pb-3">
-                <span className="eyebrow flex items-center gap-2">
-                  <span className="live-dot" aria-hidden="true" />
-                  NAVIGATION
-                </span>
-                <span className="font-mono text-xs text-muted-foreground">F1 2026</span>
-              </div>
+              {user && (
+                <Link
+                  href={`/profile/${user.id}`}
+                  className="mobile-profile-card"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span className="mobile-profile-avatar" aria-hidden="true">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="mobile-nav-content">
+                    <span className="mobile-profile-name">{user.name}</span>
+                    <span className="mobile-nav-sub">View profile & stats</span>
+                  </span>
+                  <ArrowUpRight className="size-4 text-muted-foreground" aria-hidden="true" />
+                </Link>
+              )}
 
-              <nav className="flex flex-col gap-2" aria-label="Mobile menu links">
-                {navItemsFor(isAdmin).map(({ href, label, subtitle, icon: Icon }, index) => {
+              <nav className="mobile-nav-list" aria-label="Mobile menu links">
+                {navItemsFor(isAdmin).map(({ href, label, subtitle, icon: Icon }) => {
                   const active = isActive(href, pathname)
                   return (
                     <Link
                       key={href}
                       href={href}
-                      className="mobile-nav-link rise"
+                      className="mobile-nav-link"
                       data-active={active}
-                      style={{ '--i': index } as React.CSSProperties}
                       onClick={() => setIsOpen(false)}
                     >
                       <span className="mobile-nav-icon">
@@ -98,54 +106,37 @@ export function MobileMenu({ user, isAdmin = false }: MobileMenuProps) {
                         <span className="mobile-nav-title">{label}</span>
                         <span className="mobile-nav-sub">{subtitle}</span>
                       </span>
-                      <ChevronRight className="text-muted-foreground size-4 ml-auto" aria-hidden="true" />
+                      {active && <span className="mobile-active-dot" aria-hidden="true" />}
                     </Link>
                   )
                 })}
               </nav>
 
-              <div className="mt-2 pt-4 border-t border-border flex flex-col gap-3">
+              <div className="mobile-drawer-footer">
                 {user ? (
-                  <>
-                    <Link
-                      href={`/profile/${user.id}`}
-                      className="mobile-profile-card rise"
-                      style={{ '--i': 4 } as React.CSSProperties}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <span className="avatar size-9" aria-hidden="true">
-                        {user.name.charAt(0).toUpperCase()}
-                      </span>
-                      <span className="mobile-nav-content">
-                        <span className="mobile-nav-title truncate">{user.name}</span>
-                        <span className="mobile-nav-sub">View driver profile</span>
-                      </span>
-                      <UserRound className="size-4 text-primary ml-auto" aria-hidden="true" />
-                    </Link>
-                    <button
-                      type="button"
-                      className="mobile-sign-out-btn"
-                      onClick={handleSignOut}
-                    >
-                      <LogOut className="size-4" aria-hidden="true" />
-                      <span>Sign Out</span>
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    className="mobile-sign-out-btn"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="size-4" aria-hidden="true" />
+                    <span>Sign out</span>
+                  </button>
                 ) : (
-                  <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <Link
                       href="/sign-in"
-                      className="button-primary w-full text-center"
+                      className="button-primary text-center"
                       onClick={() => setIsOpen(false)}
                     >
-                      Sign In
+                      Sign in
                     </Link>
                     <Link
                       href="/sign-up"
-                      className="button-secondary w-full text-center"
+                      className="button-secondary text-center"
                       onClick={() => setIsOpen(false)}
                     >
-                      Create Account
+                      Sign up
                     </Link>
                   </div>
                 )}

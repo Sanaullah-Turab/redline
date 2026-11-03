@@ -10,10 +10,7 @@ export function RecentSessionsList({
   return (
     <div className="panel flex flex-col justify-between">
       <div className="panel-heading">
-        <div>
-          <h2>Recent sessions</h2>
-          <p className="stats-chart-Sub">P1 to P10 markers from left to right (filled = exact hit)</p>
-        </div>
+        <h2>Recent sessions</h2>
       </div>
 
       {sessions.length ? (
@@ -27,11 +24,17 @@ export function RecentSessionsList({
                 title={`${session.raceName} · ${session.sessionName}: ${session.points} pts`}
               >
                 <span className="recent-session-title">
-                  <b>R{session.round} {session.sessionName}</b>
-                  <small>{session.raceName}</small>
+                  <b>
+                    R{session.round} {session.sessionName}
+                  </b>
                 </span>
-                <span className="recent-session-pts">{session.points} {session.points === 1 ? 'pt' : 'pts'}</span>
-                <span className="hit-strip" aria-label={`${session.points} of 10 positions correct`}>
+                <span className="recent-session-pts">
+                  {session.points} {session.points === 1 ? 'pt' : 'pts'}
+                </span>
+                <span
+                  className="hit-strip"
+                  aria-label={`${session.points} of 10 positions correct`}
+                >
                   {session.markers.map((marker) => (
                     <span
                       key={marker.position}
@@ -46,7 +49,7 @@ export function RecentSessionsList({
           ))}
         </ul>
       ) : (
-        <p className="text-muted-foreground">Not enough data yet.</p>
+        <p className="text-sm text-muted-foreground">Not enough data yet.</p>
       )}
     </div>
   )

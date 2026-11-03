@@ -52,7 +52,7 @@ function Ranking({ title, rows }: { title: string; rows: { id: string; name: str
           {rows.map((row, index) => (
             <li key={row.id}>
               <Link href={`/profile/${row.id}`} className="history-row">
-                <span className="rank">{String(index + 1).padStart(2, '0')}</span>
+                <span className="rank">{index + 1}</span>
                 <b>{row.name}</b>
                 <span className="pts">{row.value}</span>
               </Link>
@@ -65,3 +65,4 @@ function Ranking({ title, rows }: { title: string; rows: { id: string; name: str
     </div>
   )
 }
+

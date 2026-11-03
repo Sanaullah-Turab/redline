@@ -51,3 +51,4 @@ export function PositionAccuracyChart({ positions }: { positions: PositionAccura
     </div>
   )
 }
+
