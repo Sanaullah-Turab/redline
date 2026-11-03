@@ -1,11 +1,11 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowRight, History } from 'lucide-react'
+import { History } from 'lucide-react'
 import { BarChart } from '@/components/bar-chart'
+import { WeekendPicksExplorer } from '@/components/picks/weekend-picks-explorer'
 import { SiteHeader } from '@/components/site-header'
 import { StatCard } from '@/components/stat-card'
 import { sessionLabel, type SessionType } from '@/lib/f1'
-import { getProfile, MAX_POINTS_PER_SESSION } from '@/lib/stats'
+import { getProfile, getUserWeekendPicks, MAX_POINTS_PER_SESSION } from '@/lib/stats'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function Page({ params }: Props) {
   const { id } = await params
-  const profile = await getProfile(id)
+  const [profile, weekendPicks] = await Promise.all([getProfile(id), getUserWeekendPicks(id)])
   if (!profile) notFound()
 
   const joined = profile.joined.toLocaleDateString('en', { month: 'short', year: 'numeric' })
@@ -69,20 +69,11 @@ export default async function Page({ params }: Props) {
             </div>
           </div>
 
-          <div>
-            <div className="section-heading" style={{ margin: '0 0 1rem' }}><div><p className="eyebrow">PREDICTION LOG</p><h2>History</h2></div></div>
-            {profile.history.length ? profile.history.map((h) => (
-              <div className="history-row" key={`${h.round}-${h.sessionType}`}>
-                <span className="round">R{String(h.round).padStart(2, '0')}</span>
-                <span className="flex flex-wrap items-center gap-2">
-                  <b>{sessionLabel(h.sessionType as SessionType) ?? h.sessionType}</b>
-                  <small className="text-muted-foreground">P1 {h.positions[0]?.toUpperCase() ?? '-'}</small>
-                  <span className="pill" data-tone={h.scored ? undefined : 'live'}>{h.scored ? 'Scored' : 'Pending'}</span>
-                </span>
-                <span className="pts">{h.scored ? `${h.points} pts` : '-'}</span>
-              </div>
-            )) : <div className="empty-grid"><History /><p>No predictions yet.</p><Link href="/calendar" className="button-primary">Pick a race <ArrowRight /></Link></div>}
-          </div>
+          <WeekendPicksExplorer
+            weekends={weekendPicks}
+            heading={`${profile.name}'s weekend picks`}
+            eyebrow="PREDICTION LOG"
+          />
         </section>
       </main>
     </>
