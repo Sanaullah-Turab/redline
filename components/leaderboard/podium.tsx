@@ -10,11 +10,17 @@ export function Podium({ rows }: { rows: RankedStanding[] }) {
       {PODIUM_ORDER.map((index) => {
         const row = rows[index]
         return (
-          <Link key={row.id} href={`/profile/${row.id}`} className="podium-step rise" data-place={row.rank} style={{ '--i': index + 1 } as React.CSSProperties}>
-            <span className="place">P{row.rank}</span>
+          <Link
+            key={row.id}
+            href={`/profile/${row.id}`}
+            className="podium-step rise"
+            data-place={row.rank}
+            style={{ '--i': index + 1 } as React.CSSProperties}
+          >
+            <span className="place">{row.rank}</span>
             <b>{row.name}</b>
-            <strong>{row.points}</strong>
-            <small className="text-muted-foreground">{row.accuracy}% accuracy</small>
+            <strong>{row.points} <small>pts</small></strong>
+            <span className="podium-sub">{row.accuracy}% accuracy</span>
           </Link>
         )
       })}

@@ -2,23 +2,31 @@ import Link from 'next/link'
 import { Crown, Trophy } from 'lucide-react'
 import type { RankedStanding } from '@/lib/stats'
 
-function GapLabel({ row }: { row: RankedStanding }) {
-  if (row.isLeader) return <small className="lb-gap lb-gap--leader">Leader</small>
-  if (row.gap === 0) return <small className="lb-gap">Level</small>
-  return <small className="lb-gap">-{row.gap}</small>
+function formatGap(row: RankedStanding): string {
+  if (row.isLeader) return '-'
+  if (row.gap === 0) return '0'
+  return `-${row.gap}`
 }
 
 export function LeaderboardTable({ rows, meId }: { rows: RankedStanding[]; meId?: string }) {
   if (!rows.length) {
-    return <div className="empty-grid"><Trophy /><p>No contenders yet. Create an account to take the first grid slot.</p></div>
+    return (
+      <div className="empty-grid">
+        <Trophy />
+        <p>No contenders yet. Create an account to take the first grid slot.</p>
+      </div>
+    )
   }
+
   const leaderPoints = rows[0].points
+
   return (
     <div className="leaderboard">
       <div className="lb-grid lb-head" aria-hidden="true">
         <span>POS</span>
         <span>PLAYER</span>
         <span className="lb-num">POINTS</span>
+        <span className="lb-num">GAP</span>
         <span className="lb-num">ACCURACY</span>
       </div>
       <ol>
@@ -34,20 +42,24 @@ export function LeaderboardTable({ rows, meId }: { rows: RankedStanding[]; meId?
                 data-rank={row.rank}
                 style={{ '--i': Math.min(index, 12), '--share': `${share}%` } as React.CSSProperties}
               >
-                <span className="lb-rank">{String(row.rank).padStart(2, '0')}</span>
+                <span className="lb-rank">{row.rank}</span>
                 <span className="lb-player">
                   <span className="lb-name">
                     {row.isLeader && <Crown className="lb-crown" aria-label="Leader" />}
                     <b>{row.name}</b>
-                    {row.id === meId && <span className="pill" data-tone="live">You</span>}
+                    {row.id === meId && (
+                      <span className="pill" data-tone="live">
+                        YOU
+                      </span>
+                    )}
                   </span>
-                  <small>{row.scored} scored {row.scored === 1 ? 'session' : 'sessions'}</small>
+                  <small>
+                    {row.scored} scored {row.scored === 1 ? 'session' : 'sessions'}
+                  </small>
                 </span>
-                <span className="lb-num lb-points">
-                  <strong>{row.points}</strong>
-                  <GapLabel row={row} />
-                </span>
-                <span className="lb-num lb-accuracy">{row.accuracy}%</span>
+                <span className="lb-num lb-metric lb-points">{row.points}</span>
+                <span className="lb-num lb-metric lb-gap">{formatGap(row)}</span>
+                <span className="lb-num lb-metric lb-accuracy">{row.accuracy}%</span>
               </Link>
             </li>
           )
