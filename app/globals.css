@@ -32,12 +32,8 @@
   border-color: var(--border);
 }
 
-html,
 body {
   overflow-x: clip;
-}
-
-body {
   background-color: var(--background);
   color: var(--foreground);
   min-height: 100vh;
@@ -625,6 +621,7 @@ svg {
 .driver-pool {
   max-height: 580px;
   overflow: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
