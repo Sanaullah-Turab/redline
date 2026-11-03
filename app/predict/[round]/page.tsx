@@ -1,9 +1,12 @@
-import { PredictionPicker } from '@/components/prediction-picker'
+import { PredictionPicker } from '@/components/prediction/prediction-picker'
 import { SiteHeader } from '@/components/site-header'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { predictions } from '@/lib/db/schema'
-import { formatRaceWeekend, getDrivers, getSchedule, isSprint, SEASON, sessionStart } from '@/lib/f1'
+import { getDriverCatalog, getRoundDrivers } from '@/lib/drivers/round-drivers'
+import { syncRoundDrivers } from '@/lib/drivers/sync'
+import { formatRaceWeekend, getSchedule, isSprint, SEASON, sessionStart, type SessionType } from '@/lib/f1'
+import { getShortcut } from '@/lib/reference'
 import { and, eq } from 'drizzle-orm'
 import { CalendarDays, MapPin, Zap } from 'lucide-react'
 import { headers } from 'next/headers'
@@ -11,15 +14,16 @@ import { notFound, redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
+const WEEKEND_LEAD_MS = 3 * 24 * 60 * 60 * 1000
+
 export default async function Page({ params }: { params: Promise<{ round: string }> }) {
   const { round: raw } = await params
   const round = Number(raw)
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect('/sign-in')
 
-  const [schedule, drivers, picks] = await Promise.all([
+  const [schedule, picks] = await Promise.all([
     getSchedule(),
-    getDrivers(),
     db.select().from(predictions).where(and(eq(predictions.userId, session.user.id), eq(predictions.season, SEASON), eq(predictions.round, round))),
   ])
 
@@ -28,12 +32,22 @@ export default async function Page({ params }: { params: Promise<{ round: string
 
   const isSprintWeekend = isSprint(event)
   const now = new Date()
+  const weekendOpen = now.getTime() >= new Date(`${event.date}T00:00:00Z`).getTime() - WEEKEND_LEAD_MS
 
-  const pick = (type: string) => picks.find((p) => p.sessionType === type)?.positions ?? []
-  const isLocked = (type: 'qualifying' | 'race' | 'sprint-qualifying' | 'sprint') => {
+  const [practice3, grid] = await Promise.all([
+    getShortcut(SEASON, event, 'practice-3', now),
+    getShortcut(SEASON, event, 'grid', now),
+    weekendOpen ? syncRoundDrivers(SEASON, event) : undefined,
+  ])
+  const [drivers, catalog] = await Promise.all([getRoundDrivers(SEASON, round), getDriverCatalog(SEASON)])
+
+  const types: SessionType[] = ['qualifying', 'race', 'sprint-qualifying', 'sprint']
+  const initial = Object.fromEntries(types.map((type) => [type, picks.find((p) => p.sessionType === type)?.positions ?? []])) as Record<SessionType, string[]>
+  const locked = Object.fromEntries(types.map((type) => {
     const start = sessionStart(event, type)
-    return Number.isNaN(start.getTime()) || now >= start
-  }
+    const unavailable = (type === 'sprint' || type === 'sprint-qualifying') && !isSprintWeekend
+    return [type, unavailable || Number.isNaN(start.getTime()) || now >= start]
+  })) as Record<SessionType, boolean>
 
   return <>
     <SiteHeader />
@@ -53,16 +67,13 @@ export default async function Page({ params }: { params: Promise<{ round: string
       <section className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
         <PredictionPicker
           drivers={drivers}
+          catalog={[...catalog.values()]}
           round={round}
           isSprintWeekend={isSprintWeekend}
-          initialQualifying={pick('qualifying')}
-          initialRace={pick('race')}
-          initialSprintQualifying={pick('sprint-qualifying')}
-          initialSprint={pick('sprint')}
-          qualLocked={isLocked('qualifying')}
-          raceLocked={isLocked('race')}
-          sprintQualLocked={!isSprintWeekend || isLocked('sprint-qualifying')}
-          sprintLocked={!isSprintWeekend || isLocked('sprint')}
+          initial={initial}
+          locked={locked}
+          practice3={practice3}
+          grid={grid}
         />
       </section>
     </main>

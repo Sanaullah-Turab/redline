@@ -2,7 +2,8 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { predictions } from '@/lib/db/schema'
-import { getDrivers, getSchedule, isSprint, SEASON, sessionStart, type SessionType } from '@/lib/f1'
+import { getRoundDrivers } from '@/lib/drivers/round-drivers'
+import { getSchedule, isSprint, SEASON, sessionStart, type SessionType } from '@/lib/f1'
 import { and, eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
@@ -14,7 +15,7 @@ async function getUser() { const session = await auth.api.getSession({ headers: 
 export async function savePrediction(round: number, type: SessionType, positions: string[]) {
   const { id, name: userName } = await getUser()
   if (!Number.isInteger(round) || !VALID_TYPES.includes(type)) throw new Error('Invalid prediction')
-  const [schedule, drivers] = await Promise.all([getSchedule(), getDrivers()])
+  const [schedule, drivers] = await Promise.all([getSchedule(), getRoundDrivers(SEASON, round)])
   const event = schedule.find((race) => race.round === round)
   if (!event) throw new Error('Predictions are locked for this session')
   if ((type === 'sprint' || type === 'sprint-qualifying') && !isSprint(event)) throw new Error('This round is not a sprint weekend')
