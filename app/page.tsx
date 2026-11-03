@@ -12,25 +12,28 @@ import { getSession } from '@/lib/session'
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
-  const [schedule, session] = await Promise.all([getSchedule(), getSession()])
+  const [schedule, session, userStats] = await Promise.all([
+    getSchedule(),
+    getSession(),
+    getSession().then(async (sess) => {
+      if (!sess?.user) return null
+      const [row] = await db
+        .select({
+          points: sql<number>`coalesce(sum(${predictions.points}), 0)::int`,
+          picks: sql<number>`count(*)::int`,
+        })
+        .from(predictions)
+        .where(and(eq(predictions.userId, sess.user.id), eq(predictions.season, SEASON)))
+      return row ?? null
+    }),
+  ])
   const now = new Date()
   const upcoming = schedule.find((race) => sessionStart(race, 'race') > now) ?? schedule.at(-1)
   const completed = schedule.filter((race) => sessionStart(race, 'race') < now).length
   const sprintRounds = schedule.filter(isSprint).length
 
-  let myPoints = 0
-  let myPicks = 0
-  if (session?.user) {
-    const [stats] = await db
-      .select({
-        points: sql<number>`coalesce(sum(${predictions.points}), 0)::int`,
-        picks: sql<number>`count(*)::int`,
-      })
-      .from(predictions)
-      .where(and(eq(predictions.userId, session.user.id), eq(predictions.season, SEASON)))
-    myPoints = stats?.points ?? 0
-    myPicks = stats?.picks ?? 0
-  }
+  const myPoints = userStats?.points ?? 0
+  const myPicks = userStats?.picks ?? 0
 
   const preview = schedule.filter((race) => sessionStart(race, 'race') >= now).slice(0, 6)
   const upcomingSession = upcoming ? nextSession(upcoming, now) : undefined

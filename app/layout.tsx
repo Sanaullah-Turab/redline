@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Barlow_Condensed, Geist } from 'next/font/google'
+import { SmoothScroll } from '@/components/smooth-scroll'
 import { StartLightsIntro } from '@/components/start-lights-intro'
 import './globals.css'
 import './styles/effects.css'
@@ -46,6 +47,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth" className="bg-background">
       <body className={`${body.variable} ${display.variable} font-sans antialiased`}>
+        <SmoothScroll />
         <StartLightsIntro />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
