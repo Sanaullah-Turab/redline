@@ -3,8 +3,9 @@
   top: 0;
   z-index: 40;
   border-bottom: 1px solid rgb(255 255 255 / 0.08);
-  background: rgb(11 12 16 / 0.82);
-  backdrop-filter: blur(20px) saturate(150%);
+  background: rgb(11 12 16 / 0.92);
+  backdrop-filter: blur(24px) saturate(165%);
+  -webkit-backdrop-filter: blur(24px) saturate(165%);
 }
 
 .logo-mark {
