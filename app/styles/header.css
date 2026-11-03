@@ -2,9 +2,9 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  border-bottom: 1px solid rgb(255 255 255 / 0.07);
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
   background: rgb(11 12 16 / 0.82);
-  backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(150%);
 }
 
 .logo-mark {
@@ -33,15 +33,21 @@
   height: 2px;
   border-radius: 999px;
   background: var(--primary);
+  box-shadow: 0 0 8px rgb(237 27 36 / 0.7);
   transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 0.22s var(--ease);
+  transform-origin: left;
+  transition: transform 0.26s var(--ease);
 }
 
 .nav-link[data-active='true'] {
   color: var(--foreground);
 }
 
+.nav-link:hover {
+  color: var(--primary);
+}
+
+.nav-link:hover::after,
 .nav-link[data-active='true']::after {
   transform: scaleX(1);
 }

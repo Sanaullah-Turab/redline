@@ -1,15 +1,5 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import './styles/effects.css';
-@import './styles/header.css';
-@import './styles/home.css';
-@import './styles/stats.css';
-@import './styles/leaderboard.css';
-@import './styles/prediction.css';
-@import './styles/picks.css';
-@import './styles/calendar.css';
-@import './styles/admin.css';
-@import './styles/mobile-menu.css';
 
 @theme inline {
   --font-sans: var(--font-body);
@@ -53,6 +43,18 @@ body {
   min-height: 100vh;
 }
 
+a,
+button:not(:disabled),
+[role='button']:not(:disabled),
+[role='tab']:not(:disabled),
+summary {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 svg {
   width: 1.1em;
   height: 1.1em;
@@ -69,25 +71,47 @@ svg {
 .button-primary,
 .button-secondary,
 .nav-link {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
   font-weight: 600;
   font-size: 0.875rem;
-  transition: all 0.2s var(--ease);
+  transition: color 0.22s var(--ease), border-color 0.22s var(--ease), background-color 0.22s var(--ease), box-shadow 0.22s var(--ease), transform 0.22s var(--ease);
 }
 
 .button-primary {
   background: var(--primary);
   color: #ffffff;
-  padding: 0.65rem 1.1rem;
+  padding: 0.65rem 1.15rem;
   border-radius: 0.5rem;
+  border: 1px solid rgb(255 255 255 / 0.14);
 }
 
-.button-primary:hover {
+.button-primary::before {
+  content: '';
+  position: absolute;
+  left: 0.85rem;
+  right: 0.85rem;
+  bottom: 0.22rem;
+  height: 2px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 0 8px rgb(255 255 255 / 0.8);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.26s var(--ease);
+}
+
+.button-primary:hover:not(:disabled) {
   transform: translateY(-1px);
   background: #f52831;
+  color: #ffffff;
+}
+
+.button-primary:hover:not(:disabled)::before {
+  transform: scaleX(1);
 }
 
 .button-primary:disabled {
@@ -97,9 +121,35 @@ svg {
 .button-secondary {
   border: 1px solid rgb(255 255 255 / 0.1);
   border-radius: 0.5rem;
-  padding: 0.6rem 1rem;
-  background: rgb(255 255 255 / 0.03);
+  padding: 0.6rem 1.05rem;
+  background: rgb(20 21 27 / 0.72);
+  backdrop-filter: blur(12px);
   color: var(--foreground);
+}
+
+.button-secondary::after {
+  content: '';
+  position: absolute;
+  left: 0.85rem;
+  right: 0.85rem;
+  bottom: 0.22rem;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 8px rgb(237 27 36 / 0.65);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.26s var(--ease);
+}
+
+.button-secondary:hover:not(:disabled) {
+  color: var(--primary);
+  border-color: rgb(237 27 36 / 0.45);
+  background: rgb(237 27 36 / 0.06);
+}
+
+.button-secondary:hover:not(:disabled)::after {
+  transform: scaleX(1);
 }
 
 .nav-link {
@@ -109,13 +159,8 @@ svg {
   color: var(--muted-foreground);
 }
 
-.button-secondary:hover {
-  border-color: rgb(255 255 255 / 0.24);
-  background: rgb(255 255 255 / 0.06);
-}
-
 .nav-link:hover {
-  color: var(--foreground);
+  color: var(--primary);
 }
 
 .home-hero,
@@ -128,9 +173,19 @@ svg {
 .stats-strip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border: 1px solid rgb(255 255 255 / 0.08);
+  border: 1px solid rgb(255 255 255 / 0.09);
+  border-top: 2.5px solid #ff2932;
   border-radius: 0.75rem;
-  background: #14151b;
+  background: linear-gradient(
+    180deg,
+    rgb(237 27 36 / 0.13) 0%,
+    rgb(237 27 36 / 0.03) 40%,
+    rgb(18 19 25 / 0.72) 100%
+  );
+  backdrop-filter: blur(18px) saturate(150%);
+  box-shadow:
+    inset 0 20px 30px -18px rgb(237 27 36 / 0.42),
+    0 -2px 14px -4px rgb(237 27 36 / 0.35);
   overflow: hidden;
   margin-bottom: 2.25rem;
 }
@@ -164,9 +219,16 @@ svg {
 }
 
 .next-race {
-  border: 1px solid rgb(255 255 255 / 0.09);
+  border: 1px solid rgb(255 255 255 / 0.1);
   border-radius: 0.85rem;
-  background: #14151b;
+  background: linear-gradient(
+    180deg,
+    rgb(237 27 36 / 0.12) 0%,
+    rgb(237 27 36 / 0.025) 38%,
+    rgb(18 19 25 / 0.74) 100%
+  );
+  backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: inset 0 22px 34px -20px rgb(237 27 36 / 0.4);
   overflow: hidden;
 }
 
@@ -178,6 +240,7 @@ svg {
   gap: 0.5rem;
   padding: 0.65rem 1.25rem;
   background: linear-gradient(90deg, var(--primary), #b91017);
+  box-shadow: 0 4px 18px -4px rgb(237 27 36 / 0.55);
   color: #ffffff;
   font: 800 0.72rem var(--font-display);
   letter-spacing: 0.12em;
@@ -275,7 +338,7 @@ svg {
   min-width: 0;
   border: 1px solid rgb(255 255 255 / 0.1);
   border-radius: 0.5rem;
-  background: #101116;
+  background: rgb(16 17 22 / 0.8);
   color: var(--foreground);
   padding: 0 0.85rem;
   font-size: 0.875rem;
@@ -313,12 +376,14 @@ svg {
   gap: 0.25rem;
   padding: 0.25rem;
   border-radius: 0.6rem;
-  background: #121318;
+  background: rgb(18 19 25 / 0.78);
+  backdrop-filter: blur(14px);
   border: 1px solid rgb(255 255 255 / 0.08);
   max-width: 100%;
 }
 
 .session-tabs button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -329,16 +394,44 @@ svg {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted-foreground);
-  transition: all 0.18s var(--ease);
+  transition: color 0.2s var(--ease), background-color 0.2s var(--ease);
+}
+
+.session-tabs button::after {
+  content: '';
+  position: absolute;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: 0.18rem;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 8px rgb(237 27 36 / 0.65);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.26s var(--ease);
 }
 
 .session-tabs button:hover {
-  color: var(--foreground);
+  color: var(--primary);
+}
+
+.session-tabs button:hover::after {
+  transform: scaleX(1);
 }
 
 .session-tabs button[aria-selected='true'] {
   color: #ffffff;
   background: var(--primary);
+}
+
+.session-tabs button[aria-selected='true']::after {
+  background: #ffffff;
+  box-shadow: 0 0 8px rgb(255 255 255 / 0.75);
+}
+
+.session-tabs button[aria-selected='true']:hover {
+  color: #ffffff;
 }
 
 .session-tabs span {
@@ -361,8 +454,17 @@ svg {
   padding: 0.85rem 1.1rem;
   border-radius: 0.6rem;
   border: 1px solid rgb(237 27 36 / 0.35);
-  border-left: 3px solid var(--primary);
-  background: #14151b;
+  border-left: 3px solid #ff2932;
+  background: linear-gradient(
+    90deg,
+    rgb(237 27 36 / 0.16) 0%,
+    rgb(237 27 36 / 0.03) 38%,
+    rgb(18 19 25 / 0.74) 100%
+  );
+  backdrop-filter: blur(16px);
+  box-shadow:
+    inset 18px 0 28px -16px rgb(237 27 36 / 0.45),
+    -2px 0 12px -3px rgb(237 27 36 / 0.35);
   font-size: 0.88rem;
   font-weight: 600;
 }
@@ -375,7 +477,16 @@ svg {
   border-radius: 0.6rem;
   border: 1px solid rgb(245 158 11 / 0.3);
   border-left: 3px solid hsl(38, 95%, 50%);
-  background: #14151b;
+  background: linear-gradient(
+    90deg,
+    rgb(245 158 11 / 0.15) 0%,
+    rgb(245 158 11 / 0.03) 38%,
+    rgb(18 19 25 / 0.74) 100%
+  );
+  backdrop-filter: blur(16px);
+  box-shadow:
+    inset 18px 0 28px -16px rgb(245 158 11 / 0.42),
+    -2px 0 12px -3px rgb(245 158 11 / 0.32);
   font-size: 0.86rem;
   font-weight: 500;
   color: var(--muted-foreground);
@@ -398,7 +509,12 @@ svg {
   padding: 1.35rem 1.45rem;
   border-radius: 0.75rem;
   border: 1px solid rgb(255 255 255 / 0.08);
-  background: #14151b;
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.035) 0%,
+    rgb(18 19 25 / 0.72) 38%
+  );
+  backdrop-filter: blur(18px) saturate(145%);
 }
 
 .panel-heading {
@@ -418,7 +534,7 @@ svg {
   min-width: 0;
   padding: 0.45rem 0.75rem;
   border-radius: 0.5rem;
-  background: #0f1015;
+  background: rgb(15 16 21 / 0.82);
   border: 1px solid rgb(255 255 255 / 0.07);
 }
 
@@ -473,8 +589,8 @@ svg {
 }
 
 .icon-button:hover:not(:disabled) {
-  background: rgb(255 255 255 / 0.06);
-  color: var(--foreground);
+  background: rgb(237 27 36 / 0.1);
+  color: var(--primary);
 }
 
 .icon-button:disabled {
@@ -488,7 +604,7 @@ svg {
   min-width: 0;
   border: 1px solid rgb(255 255 255 / 0.09);
   border-radius: 0.5rem;
-  background: #101116;
+  background: rgb(16 17 22 / 0.8);
   padding-left: 0.75rem;
   margin-bottom: 0.75rem;
 }
@@ -508,6 +624,7 @@ svg {
 }
 
 .driver-pool > button {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -515,9 +632,9 @@ svg {
   text-align: left;
   padding: 0.55rem 0.7rem;
   border-radius: 0.45rem;
-  background: #0f1015;
+  background: rgb(15 16 21 / 0.82);
   border: 1px solid rgb(255 255 255 / 0.05);
-  transition: border-color 0.16s var(--ease), background-color 0.16s var(--ease);
+  transition: border-color 0.18s var(--ease), background-color 0.18s var(--ease), color 0.18s var(--ease);
 }
 
 .driver-pool > button > span:nth-child(2) {
@@ -527,7 +644,8 @@ svg {
 
 .driver-pool > button:hover {
   border-color: rgb(237 27 36 / 0.5);
-  background: rgb(255 255 255 / 0.03);
+  background: rgb(237 27 36 / 0.06);
+  color: var(--primary);
 }
 
 .add-mark {
@@ -551,6 +669,8 @@ svg {
   color: var(--muted-foreground);
   border: 1px dashed rgb(255 255 255 / 0.12);
   border-radius: 0.75rem;
+  background: rgb(18 19 25 / 0.65);
+  backdrop-filter: blur(14px);
   padding: 2rem;
 }
 
@@ -569,8 +689,8 @@ svg {
   gap: 0.75rem 1rem;
   padding: 0.85rem 1.15rem;
   border-radius: 0.65rem;
-  background: rgb(16 17 22 / 0.92);
-  backdrop-filter: blur(12px);
+  background: rgb(16 17 22 / 0.88);
+  backdrop-filter: blur(18px) saturate(150%);
   border: 1px solid rgb(255 255 255 / 0.1);
 }
 

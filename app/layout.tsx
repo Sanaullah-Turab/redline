@@ -3,6 +3,16 @@ import type { Metadata, Viewport } from 'next'
 import { Barlow_Condensed, Geist } from 'next/font/google'
 import { StartLightsIntro } from '@/components/start-lights-intro'
 import './globals.css'
+import './styles/effects.css'
+import './styles/header.css'
+import './styles/home.css'
+import './styles/stats.css'
+import './styles/leaderboard.css'
+import './styles/prediction.css'
+import './styles/picks.css'
+import './styles/calendar.css'
+import './styles/admin.css'
+import './styles/mobile-menu.css'
 
 const body = Geist({ subsets: ['latin'], variable: '--font-body' })
 const display = Barlow_Condensed({

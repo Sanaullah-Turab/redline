@@ -1,22 +1,43 @@
 .mobile-menu-toggle {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 2.45rem;
+  height: 2.45rem;
   border-radius: 0.5rem;
-  background: rgb(255 255 255 / 0.04);
-  border: 1px solid rgb(255 255 255 / 0.09);
+  background: rgb(20 21 27 / 0.88);
+  border: 1px solid rgb(255 255 255 / 0.12);
   color: var(--foreground);
   transition: all 0.2s var(--ease);
   cursor: pointer;
+}
+
+.mobile-menu-toggle::after {
+  content: '';
+  position: absolute;
+  left: 0.45rem;
+  right: 0.45rem;
+  bottom: 0.2rem;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.24s var(--ease);
 }
 
 .mobile-menu-toggle:hover,
 .mobile-menu-toggle[aria-expanded='true'] {
   border-color: rgb(237 27 36 / 0.6);
   background: rgb(237 27 36 / 0.12);
-  color: #ffffff;
+  color: var(--primary);
+}
+
+.mobile-menu-toggle:hover::after,
+.mobile-menu-toggle[aria-expanded='true']::after {
+  transform: scaleX(1);
 }
 
 .mobile-drawer-backdrop {
@@ -24,8 +45,9 @@
   top: 4rem;
   inset-inline: 0;
   bottom: 0;
-  background: rgb(8 8 10 / 0.72);
-  backdrop-filter: blur(10px);
+  background: rgb(6 7 10 / 0.88);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
   z-index: 45;
   animation: mobile-fade-in 0.2s var(--ease) both;
 }
@@ -37,10 +59,20 @@
   right: 0.75rem;
   max-height: calc(100vh - 5.5rem);
   border-radius: 0.9rem;
-  background: rgb(20 21 27 / 0.96);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgb(255 255 255 / 0.1);
-  box-shadow: 0 24px 48px -12px rgb(0 0 0 / 0.75);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-top: 2.5px solid #ff2932;
+  background: linear-gradient(
+    180deg,
+    rgb(237 27 36 / 0.14) 0%,
+    rgb(18 19 25 / 0.98) 28%,
+    rgb(12 13 18 / 0.99) 100%
+  );
+  backdrop-filter: blur(32px) saturate(170%);
+  -webkit-backdrop-filter: blur(32px) saturate(170%);
+  box-shadow:
+    inset 0 22px 32px -18px rgb(237 27 36 / 0.45),
+    0 -2px 14px -3px rgb(237 27 36 / 0.4),
+    0 28px 56px -12px rgb(0 0 0 / 0.88);
   z-index: 50;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -51,25 +83,27 @@
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  padding: 0.9rem;
+  padding: 0.95rem;
 }
 
 .mobile-profile-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 0.85rem;
   border-radius: 0.65rem;
-  background: rgb(255 255 255 / 0.04);
-  border: 1px solid rgb(255 255 255 / 0.07);
+  background: rgb(255 255 255 / 0.05);
+  border: 1px solid rgb(255 255 255 / 0.09);
   text-decoration: none;
   color: var(--foreground);
-  transition: background-color 0.18s var(--ease), border-color 0.18s var(--ease);
+  transition: background-color 0.18s var(--ease), border-color 0.18s var(--ease), color 0.18s var(--ease);
 }
 
 .mobile-profile-card:hover {
-  background: rgb(255 255 255 / 0.07);
-  border-color: rgb(255 255 255 / 0.15);
+  background: rgb(237 27 36 / 0.08);
+  border-color: rgb(237 27 36 / 0.45);
+  color: var(--primary);
 }
 
 .mobile-profile-avatar {
@@ -99,6 +133,7 @@
 }
 
 .mobile-nav-link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -109,13 +144,36 @@
   transition: background-color 0.18s var(--ease), color 0.18s var(--ease);
 }
 
+.mobile-nav-link::after {
+  content: '';
+  position: absolute;
+  left: 3.5rem;
+  right: 0.85rem;
+  bottom: 0.2rem;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 8px rgb(237 27 36 / 0.65);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.26s var(--ease);
+}
+
 .mobile-nav-link:hover {
-  background: rgb(255 255 255 / 0.04);
-  color: var(--foreground);
+  background: rgb(237 27 36 / 0.07);
+  color: var(--primary);
+}
+
+.mobile-nav-link:hover .mobile-nav-title {
+  color: var(--primary);
+}
+
+.mobile-nav-link:hover::after {
+  transform: scaleX(1);
 }
 
 .mobile-nav-link[data-active='true'] {
-  background: rgb(237 27 36 / 0.12);
+  background: rgb(237 27 36 / 0.14);
   color: var(--foreground);
 }
 
@@ -126,9 +184,15 @@
   width: 2rem;
   height: 2rem;
   border-radius: 0.45rem;
-  background: rgb(255 255 255 / 0.04);
+  background: rgb(255 255 255 / 0.05);
   color: var(--muted-foreground);
   flex-shrink: 0;
+  transition: color 0.18s var(--ease), background-color 0.18s var(--ease);
+}
+
+.mobile-nav-link:hover .mobile-nav-icon {
+  color: var(--primary);
+  background: rgb(237 27 36 / 0.14);
 }
 
 .mobile-nav-link[data-active='true'] .mobile-nav-icon {
@@ -146,6 +210,7 @@
 .mobile-nav-title {
   font: 600 0.9rem var(--font-sans);
   color: var(--foreground);
+  transition: color 0.18s var(--ease);
 }
 
 .mobile-nav-sub {
@@ -163,10 +228,11 @@
 
 .mobile-drawer-footer {
   padding-top: 0.65rem;
-  border-top: 1px solid rgb(255 255 255 / 0.07);
+  border-top: 1px solid rgb(255 255 255 / 0.08);
 }
 
 .mobile-sign-out-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -174,18 +240,37 @@
   width: 100%;
   padding: 0.6rem 0.85rem;
   border-radius: 0.55rem;
-  background: rgb(255 255 255 / 0.03);
-  border: 1px solid rgb(255 255 255 / 0.07);
+  background: rgb(255 255 255 / 0.04);
+  border: 1px solid rgb(255 255 255 / 0.09);
   color: var(--muted-foreground);
   font: 600 0.82rem var(--font-sans);
   transition: all 0.18s var(--ease);
   cursor: pointer;
 }
 
+.mobile-sign-out-btn::after {
+  content: '';
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: 0.2rem;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.26s var(--ease);
+}
+
 .mobile-sign-out-btn:hover {
-  border-color: rgb(255 86 93 / 0.45);
-  color: var(--destructive);
-  background: rgb(255 86 93 / 0.08);
+  border-color: rgb(237 27 36 / 0.5);
+  color: var(--primary);
+  background: rgb(237 27 36 / 0.08);
+}
+
+.mobile-sign-out-btn:hover::after {
+  transform: scaleX(1);
 }
 
 @keyframes mobile-fade-in {
