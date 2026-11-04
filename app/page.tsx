@@ -155,6 +155,7 @@ export default async function Home() {
                     country: race.country,
                     circuit: race.circuit,
                     date: race.date,
+                    time: race.time,
                     sprint: isSprint(race),
                     status: index === 0 ? 'next' : 'upcoming',
                     podium: [],

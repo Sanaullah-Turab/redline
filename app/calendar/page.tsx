@@ -26,6 +26,7 @@ export default async function Page() {
       country: race.country,
       circuit: race.circuit,
       date: race.date,
+      time: race.time,
       sprint: isSprint(race),
       status,
       podium: podiumMap.get(race.round) ?? [],

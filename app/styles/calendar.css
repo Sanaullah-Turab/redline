@@ -14,6 +14,7 @@
 }
 
 .f1-cal-card {
+  --card-bg: #0e0f14;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -36,6 +37,7 @@
 }
 
 .f1-cal-card--next {
+  --card-bg: #ce121b;
   background: linear-gradient(155deg, #e1161f 0%, #c10e16 100%);
   border-color: rgb(255 255 255 / 0.25);
   color: #ffffff;
@@ -465,8 +467,8 @@
 }
 
 .f1-circuit-svg {
-  width: 6.2rem;
-  height: 3.7rem;
+  width: 120px;
+  height: auto;
   flex-shrink: 0;
   color: var(--foreground);
   transition: transform 0.3s var(--ease);
