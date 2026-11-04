@@ -8,7 +8,7 @@ const SOURCE =
 const OUTPUT = 'lib/circuit-paths.ts'
 const W = 170
 const H = 100
-const PAD = 10
+const PAD = 6
 
 type Pt = { x: number; y: number }
 
@@ -16,11 +16,18 @@ const toPath = (coords: [number, number][]) => {
   const first = coords[0]
   const last = coords[coords.length - 1]
   const closed = first[0] === last[0] && first[1] === last[1]
-  const projection = geoMercator().fitExtent(
-    [[PAD, PAD], [W - PAD, H - PAD]],
-    { type: 'LineString', coordinates: coords }
-  )
-  const pts = coords.map((c) => projection(c)!)
+  const geom = { type: 'LineString' as const, coordinates: coords }
+  let best = geoMercator().angle(0).fitExtent([[PAD, PAD], [W - PAD, H - PAD]], geom)
+  let maxScale = best.scale()
+  for (let a = 5; a <= 175; a += 5) {
+    const p = geoMercator().angle(a).fitExtent([[PAD, PAD], [W - PAD, H - PAD]], geom)
+    const s = p.scale()
+    if (s > maxScale) {
+      maxScale = s
+      best = p
+    }
+  }
+  const pts = coords.map((c) => best(c)!)
   const simple = simplify(pts.map(([x, y]) => ({ x, y })), 0.35, true)
   const ring = closed ? simple.slice(0, -1) : simple
   return line<Pt>()
