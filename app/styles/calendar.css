@@ -317,9 +317,8 @@
 }
 
 .f1-cal-podium-tile[data-me='true'] .f1-cal-podium-avatar {
-  background: var(--primary);
-  border-color: #ff6b72;
-  color: #ffffff;
+  border-color: #ff2932;
+  box-shadow: 0 0 0 1px rgb(237 27 36 / 0.55);
 }
 
 .f1-cal-podium-info {
