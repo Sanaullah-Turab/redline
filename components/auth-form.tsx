@@ -127,6 +127,7 @@ export function AuthForm({ mode, next = '/', canReset = false, notice }: Props) 
             autoComplete={signUp ? 'new-password' : 'current-password'}
             invalid={Boolean(error)}
           />
+          {signUp && <span className="font-normal">At least 8 characters.</span>}
         </label>
         {error && (
           <p id="auth-error" role="alert" aria-live="assertive" className="text-sm text-destructive">
