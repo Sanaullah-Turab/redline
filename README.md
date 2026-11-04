@@ -70,6 +70,7 @@ The database is PostgreSQL hosted on Supabase and managed using Drizzle ORM.
 - `session`: Active sessions (`id`, `token`, `userId`, `expiresAt`).
 - `account`: Provider credentials and password hashes (`id`, `userId`, `providerId`, `password`).
 - `verification`: Tokens for email verification and password reset.
+- `rateLimit`: Rate limiting records for authentication requests.
 
 ### Domain Tables
 - **`predictions`**: Stores a player's top 10 picks for a specific session.
@@ -109,6 +110,10 @@ The application requires verified, contiguous top 10 classifications before awar
   - Vercel Cron runs daily as a secondary fallback.
 - **Targeted / Force Scoring**:
   - `/api/score?round=[round]&type=[sessionType]&force=true` can be called to score or re-score any session on demand. Both endpoints require a `Bearer <CRON_SECRET>` authorization header.
+
+### 4. Profile Privacy (`app/profile/[id]/page.tsx`, `lib/stats/picks.ts`)
+- Profile owners viewing their own page see all predictions, including unscored sessions with edit shortcuts.
+- Other viewers only receive predictions that are already scored, ordered newest first. Unscored picks are filtered on the server and never sent in the page payload.
 
 ---
 
