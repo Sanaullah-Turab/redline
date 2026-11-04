@@ -2,29 +2,66 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, LoaderCircle } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, LoaderCircle, MailCheck } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 
-export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
+export function AuthForm({ mode, next = '/' }: { mode: 'sign-in' | 'sign-up'; next?: string }) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [sentTo, setSentTo] = useState('')
   const signUp = mode === 'sign-up'
+
+  const query = next === '/' ? '' : `?next=${encodeURIComponent(next)}`
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const result = signUp
-      ? await authClient.signUp.email({ name, email, password })
-      : await authClient.signIn.email({ email, password })
-    setLoading(false)
-    if (result.error) return setError(result.error.message || 'Unable to continue')
-    router.push('/')
-    router.refresh()
+    try {
+      const result = signUp
+        ? await authClient.signUp.email({ name, email, password, callbackURL: next })
+        : await authClient.signIn.email({ email, password, callbackURL: next })
+      if (result.error) {
+        if (result.error.status === 403) {
+          setSentTo(email)
+          return
+        }
+        setError(result.error.message || 'Unable to continue')
+        return
+      }
+      if (signUp && !result.data?.token) {
+        setSentTo(email)
+        return
+      }
+      router.push(next)
+      router.refresh()
+    } catch {
+      setError('Network error. Check your connection and try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (sentTo) {
+    return (
+      <main className="auth-shell">
+        <section className="auth-panel" role="status">
+          <MailCheck className="size-10 text-primary" aria-hidden="true" />
+          <h1 className="text-balance font-mono text-4xl font-black uppercase italic">Check your inbox</h1>
+          <p className="text-muted-foreground">
+            We sent a verification link to <strong className="text-foreground">{sentTo}</strong>. Open it to activate your account, then sign in.
+          </p>
+          <button type="button" className="button-primary h-12" onClick={() => setSentTo('')}>
+            Back
+          </button>
+        </section>
+      </main>
+    )
   }
 
   return (
@@ -68,24 +105,40 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? 'auth-error' : undefined}
               autoComplete="email"
             />
           </label>
           <label className="field">
             Password
-            <input
-              id="auth-password"
-              name="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              autoComplete={signUp ? 'new-password' : 'current-password'}
-            />
+            <span className="relative flex">
+              <input
+                id="auth-password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                autoComplete={signUp ? 'new-password' : 'current-password'}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'auth-error' : undefined}
+                className="w-full pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+              </button>
+            </span>
           </label>
           {error && (
-            <p role="alert" className="text-sm text-destructive">
+            <p id="auth-error" role="alert" aria-live="assertive" className="text-sm text-destructive">
               {error}
             </p>
           )}
@@ -102,7 +155,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
         </form>
         <p className="text-sm text-muted-foreground">
           {signUp ? 'Already racing? ' : 'New to Redline? '}
-          <Link className="font-bold text-foreground underline" href={signUp ? '/sign-in' : '/sign-up'}>
+          <Link className="font-bold text-foreground underline" href={`${signUp ? '/sign-in' : '/sign-up'}${query}`}>
             {signUp ? 'Sign in' : 'Create account'}
           </Link>
         </p>
