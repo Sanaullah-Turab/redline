@@ -116,6 +116,7 @@ The application requires verified, contiguous top 10 classifications before awar
 
 - Email and password via Better Auth. With SMTP configured, sign-up requires email verification (links expire in 24 hours) and a sign-in attempt by an unverified user resends the link.
 - Forgot password at `/forgot-password`; reset links expire in 1 hour. Both pages are hidden when SMTP is not configured.
+- Rate limiting is stored in the `rateLimit` table (active in production): 5 sign-ins/min, 5 sign-ups per 5 min, and 3 reset or verification emails per 5 min per IP. Run `drizzle/0003_rate_limit.sql` on any new database.
 - `?next=` returns users to the page they came from; only same-site paths are accepted.
 
 ---
