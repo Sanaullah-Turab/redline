@@ -151,7 +151,7 @@ export function CalendarCard({
               {race.status === 'next' ? 'Enter predictions' : 'Make picks'} <ChevronRight aria-hidden="true" />
             </Link>
           </div>
-          <CircuitDecor round={race.round} />
+          <CircuitDecor circuitId={race.circuit} />
         </div>
       )}
     </article>

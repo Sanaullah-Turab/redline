@@ -1,3 +1,6 @@
+import { CIRCUIT_PATHS as REAL_CIRCUIT_PATHS } from '@/lib/circuit-paths'
+import { CIRCUIT_MAP } from '@/lib/circuit-mapping'
+
 const CIRCUIT_PATHS: Record<number, string> = {
   1: 'M34 74 L98 78 L114 72 L118 76 L138 72 L148 54 L136 42 L118 44 L96 28 L66 22 L46 28 L38 24 L22 36 L20 56 L30 62 L24 72 Z',
   2: 'M24 80 L132 80 L146 76 L142 64 L54 62 C36 62, 34 44, 52 44 L76 46 L94 34 L118 36 L124 24 L92 22 L76 34 L62 28 C58 16, 32 16, 28 32 C26 44, 42 46, 44 36 C44 28, 34 28, 34 36 L24 58 Z',
@@ -24,8 +27,10 @@ const CIRCUIT_PATHS: Record<number, string> = {
   23: 'M84 36 L116 36 L118 24 L42 22 C28 22, 26 36, 38 38 L30 74 C28 84, 48 86, 52 74 L112 72 L116 82 L144 80 L144 58 L124 58 L124 46 L84 46 Z',
 }
 
-export function CircuitDecor({ round }: { round: number }) {
-  const path = CIRCUIT_PATHS[round] ?? CIRCUIT_PATHS[((round - 1) % 23) + 1]
+export function CircuitDecor({ circuitId }: { circuitId?: string }) {
+  const key = circuitId ? (CIRCUIT_MAP[circuitId] ?? circuitId) : ''
+  const path = REAL_CIRCUIT_PATHS[key]
+  if (!path) return null
   return (
     <svg
       viewBox="0 0 170 100"
