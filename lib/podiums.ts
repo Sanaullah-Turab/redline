@@ -25,7 +25,7 @@ export async function refreshRoundPodium(season: number, round: number): Promise
   let currentRank = 0
   const values = top.map((row, index) => {
     if (index === 0 || row.points !== top[index - 1].points) {
-      currentRank = index + 1
+      currentRank += 1
     }
     return {
       season,
