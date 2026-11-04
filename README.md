@@ -1,6 +1,6 @@
-# Redline: F1 Prediction Game
+# Redline: F1 Prediction Platform
 
-Redline is a Formula 1 prediction game built with Next.js. Users can sign in, view the F1 schedule, and drag-and-drop to predict the top 10 finishers for upcoming qualifying, race, sprint qualifying, and sprint sessions. The app automatically fetches official results, validates classification data, and scores user predictions.
+Redline is a Formula 1 prediction platform built with Next.js. Users can sign in, view the F1 schedule, and drag-and-drop to predict the top 10 finishers for upcoming qualifying, race, sprint qualifying, and sprint sessions. The app automatically fetches official results, validates classification data, and scores user predictions.
 
 Live at: [redline.sanaullah.app](https://redline.sanaullah.app)
 
