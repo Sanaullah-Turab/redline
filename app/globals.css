@@ -77,6 +77,20 @@ svg {
   transition: color 0.22s var(--ease), border-color 0.22s var(--ease), background-color 0.22s var(--ease), box-shadow 0.22s var(--ease), transform 0.22s var(--ease);
 }
 
+.button-primary svg,
+.button-secondary svg {
+  width: 1rem;
+  height: 1rem;
+  color: inherit;
+  flex-shrink: 0;
+  transition: transform 0.2s var(--ease);
+}
+
+.button-primary:hover:not(:disabled) svg,
+.button-secondary:hover:not(:disabled) svg {
+  transform: translateX(3px);
+}
+
 .button-primary {
   background: var(--primary);
   color: #ffffff;
@@ -721,7 +735,7 @@ svg {
   padding: 2rem;
 }
 
-.empty-grid svg {
+.empty-grid > svg {
   font-size: 1.75rem;
   color: var(--primary);
 }
