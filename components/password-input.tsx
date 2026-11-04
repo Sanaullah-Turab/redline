@@ -22,6 +22,7 @@ export function PasswordInput({ value, onChange, autoComplete, invalid, id = 'au
         onChange={(e) => onChange(e.target.value)}
         required
         minLength={8}
+        maxLength={128}
         autoComplete={autoComplete}
         aria-invalid={invalid}
         aria-describedby={invalid ? 'auth-error' : undefined}
