@@ -21,7 +21,21 @@ export async function GET(request: NextRequest) {
         schedules.set(season, await getSchedule(season))
       })
     )
-    const outcomes = await Promise.allSettled(sessions.map((session) => scoreRound(session.season, session.round, session.type as SessionType, schedules.get(session.season))))
+    const rounds = new Map<string, typeof sessions>()
+    for (const session of sessions) {
+      const key = `${session.season}:${session.round}`
+      rounds.set(key, [...(rounds.get(key) ?? []), session])
+    }
+    const settled = new Map<(typeof sessions)[number], PromiseSettledResult<Awaited<ReturnType<typeof scoreRound>>>>()
+    await Promise.all(
+      Array.from(rounds.values()).map(async (group) => {
+        for (const session of group) {
+          const [outcome] = await Promise.allSettled([scoreRound(session.season, session.round, session.type as SessionType, schedules.get(session.season))])
+          settled.set(session, outcome)
+        }
+      })
+    )
+    const outcomes = sessions.map((session) => settled.get(session)!)
     const scored: Array<{ season: number; round: number; type: string; entries: number }> = []
     const pending: Array<{ season: number; round: number; type: string; reason: string }> = []
     const errors: Array<{ season: number; round: number; type: string; error: string }> = []
