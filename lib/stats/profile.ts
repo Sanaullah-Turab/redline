@@ -24,7 +24,7 @@ export type Profile = {
   history: { round: number; sessionType: string; points: number; scored: boolean; positions: string[] }[]
 }
 
-export async function getProfile(id: string): Promise<Profile | null> {
+export async function getProfile(id: string, options?: { scoredOnly?: boolean }): Promise<Profile | null> {
   const [account] = await db.select({ id: user.id, name: user.name, joined: user.createdAt }).from(user).where(eq(user.id, id))
   if (!account) return null
 
@@ -47,6 +47,7 @@ export async function getProfile(id: string): Promise<Profile | null> {
 
   const ranked = rankStandings(standings)
   const myRanked = ranked.find((row) => row.id === id)
+  const historyRows = options?.scoredOnly ? scoredRows : rows
 
   return {
     id: account.id,
@@ -56,12 +57,12 @@ export async function getProfile(id: string): Promise<Profile | null> {
     players: ranked.length,
     points,
     scored: scoredRows.length,
-    picks: rows.length,
+    picks: options?.scoredOnly ? scoredRows.length : rows.length,
     best: scoredRows.reduce((max, row) => Math.max(max, row.points), 0),
     average: scoredRows.length ? Math.round((points / scoredRows.length) * 10) / 10 : 0,
     accuracy: accuracy(points, scoredRows.length),
     rounds: [...byRound].map(([round, pts]) => ({ round, points: pts })).sort((a, b) => a.round - b.round),
     sessions: [...bySession.values()],
-    history: rows.map(({ round, sessionType, points: pts, scored, positions }) => ({ round, sessionType, points: pts, scored, positions })),
+    history: historyRows.map(({ round, sessionType, points: pts, scored, positions }) => ({ round, sessionType, points: pts, scored, positions })),
   }
 }
