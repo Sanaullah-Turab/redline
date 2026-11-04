@@ -11,9 +11,36 @@ export type CalendarRaceItem = {
   country: string
   circuit: string
   date: string
+  time?: string
   sprint: boolean
   status: 'finished' | 'next' | 'upcoming'
   podium: RoundPodiumEntry[]
+}
+
+const CIRCUIT_TIMEZONES: Record<string, string> = {
+  'Albert Park Grand Prix Circuit': 'Australia/Melbourne',
+  'Shanghai International Circuit': 'Asia/Shanghai',
+  'Suzuka Circuit': 'Asia/Tokyo',
+  'Miami International Autodrome': 'America/New_York',
+  'Circuit Gilles Villeneuve': 'America/Toronto',
+  'Circuit de Monaco': 'Europe/Monaco',
+  'Circuit de Barcelona-Catalunya': 'Europe/Madrid',
+  'Red Bull Ring': 'Europe/Vienna',
+  'Silverstone Circuit': 'Europe/London',
+  'Circuit de Spa-Francorchamps': 'Europe/Brussels',
+  'Hungaroring': 'Europe/Budapest',
+  'Circuit Zandvoort': 'Europe/Amsterdam',
+  'Autodromo Nazionale di Monza': 'Europe/Rome',
+  'Madring': 'Europe/Madrid',
+  'Baku City Circuit': 'Asia/Baku',
+  'Bahrain International Circuit': 'Asia/Bahrain',
+  'Marina Bay Street Circuit': 'Asia/Singapore',
+  'Circuit of the Americas': 'America/Chicago',
+  'Autódromo Hermanos Rodríguez': 'America/Mexico_City',
+  'Autódromo José Carlos Pace': 'America/Sao_Paulo',
+  'Las Vegas Strip Street Circuit': 'America/Los_Angeles',
+  'Lusail International Circuit': 'Asia/Qatar',
+  'Yas Marina Circuit': 'Asia/Dubai',
 }
 
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
@@ -25,11 +52,33 @@ function ordinalSuffix(pos: number): string {
   return 'TH'
 }
 
-export function formatWeekendRange(endDateStr: string, startDateStr?: string): string {
-  const end = new Date(`${endDateStr}T12:00:00Z`)
+export function formatWeekendRange(
+  endDateStr: string,
+  startDateStr?: string,
+  circuit?: string,
+  timeStr?: string
+): string {
+  const tz = circuit ? (CIRCUIT_TIMEZONES[circuit] ?? (circuit.includes('Las Vegas') ? 'America/Los_Angeles' : undefined)) : undefined
+  let localEndDateStr = endDateStr
+  if (tz) {
+    const time = timeStr || (tz === 'America/Los_Angeles' ? '04:00:00Z' : '12:00:00Z')
+    const utcDate = new Date(`${endDateStr}T${time}`)
+    if (!Number.isNaN(utcDate.getTime())) {
+      localEndDateStr = new Intl.DateTimeFormat('en-CA', {
+        timeZone: tz,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(utcDate)
+    }
+  }
+
+  const [y, m, d] = localEndDateStr.split('-').map(Number)
+  const end = new Date(Date.UTC(y, m - 1, d, 12, 0, 0))
   if (Number.isNaN(end.getTime())) return endDateStr
+
   const start = startDateStr
-    ? new Date(`${startDateStr.slice(0, 10)}T12:00:00Z`)
+    ? new Date(Date.UTC(Number(startDateStr.slice(0, 4)), Number(startDateStr.slice(5, 7)) - 1, Number(startDateStr.slice(8, 10)), 12, 0, 0))
     : new Date(end.getTime() - 2 * 86_400_000)
 
   const startDay = String(start.getUTCDate()).padStart(2, '0')
@@ -54,7 +103,7 @@ export function CalendarCard({
   signedIn: boolean
   meId?: string
 }) {
-  const dateRange = formatWeekendRange(race.date)
+  const dateRange = formatWeekendRange(race.date, undefined, race.circuit, race.time)
   const href =
     race.status === 'finished'
       ? race.podium.length > 0 && signedIn
