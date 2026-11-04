@@ -1,23 +1,8 @@
 'use client'
-import { useEffect, useState } from 'react'
-
-const INTRO_KEY = 'redline:lights-out-v1'
+import { useState } from 'react'
 
 export function StartLightsIntro() {
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    try {
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-      if (window.sessionStorage.getItem(INTRO_KEY) === '1') return
-      window.sessionStorage.setItem(INTRO_KEY, '1')
-      setVisible(true)
-      const timer = window.setTimeout(() => setVisible(false), 1250)
-      return () => window.clearTimeout(timer)
-    } catch {
-      return
-    }
-  }, [])
+  const [visible, setVisible] = useState(true)
 
   if (!visible) return null
 
@@ -26,6 +11,9 @@ export function StartLightsIntro() {
       className="start-lights-overlay"
       aria-hidden="true"
       onClick={() => setVisible(false)}
+      onAnimationEnd={(event) => {
+        if (event.target === event.currentTarget) setVisible(false)
+      }}
     >
       <div className="start-lights-gantry">
         <div className="start-lights-pods">
@@ -45,4 +33,3 @@ export function StartLightsIntro() {
     </div>
   )
 }
-
