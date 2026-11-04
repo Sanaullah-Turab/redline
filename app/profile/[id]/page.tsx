@@ -5,6 +5,7 @@ import { WeekendPicksExplorer } from '@/components/picks/weekend-picks-explorer'
 import { SiteHeader } from '@/components/site-header'
 import { StatCard } from '@/components/stat-card'
 import { sessionLabel, type SessionType } from '@/lib/f1'
+import { getSession } from '@/lib/session'
 import { getProfile, getUserWeekendPicks, MAX_POINTS_PER_SESSION } from '@/lib/stats'
 
 export const dynamic = 'force-dynamic'
@@ -18,8 +19,12 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function Page({ params }: Props) {
-  const { id } = await params
-  const [profile, weekendPicks] = await Promise.all([getProfile(id), getUserWeekendPicks(id)])
+  const [{ id }, session] = await Promise.all([params, getSession()])
+  const isOwner = session?.user?.id === id
+  const [profile, weekendPicks] = await Promise.all([
+    getProfile(id, { scoredOnly: !isOwner }),
+    getUserWeekendPicks(id, { scoredOnly: !isOwner }),
+  ])
   if (!profile) notFound()
 
   const joined = profile.joined.toLocaleDateString('en', { month: 'short', year: 'numeric' })
@@ -73,6 +78,7 @@ export default async function Page({ params }: Props) {
             weekends={weekendPicks}
             heading={`${profile.name}'s weekend picks`}
             eyebrow="PREDICTION LOG"
+            emptyMessage={isOwner ? undefined : 'No scored predictions yet.'}
           />
         </section>
       </main>
