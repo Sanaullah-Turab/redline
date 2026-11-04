@@ -16,7 +16,7 @@ Live at: [redline.sanaullah.app](https://redline.sanaullah.app)
 - **Telemetry and Official Results**:
   - Primary: Jolpi Ergast F1 API (`https://api.jolpi.ca/ergast/f1`) for schedules and official classifications.
   - Fallback: OpenF1 API (`https://api.openf1.org/v1`) when primary results are malformed, delayed, or contain duplicate positions.
-  - Official 2026 driver grid hardcoded in `lib/f1.ts` to guarantee clean data independent of upstream API latency.
+  - Official 2026 driver grid hardcoded in `lib/f1/drivers.ts` to guarantee clean data independent of upstream API latency.
 - **Hosting**: Vercel
 - **Scoring Automation**: GitHub Actions scheduled workflow with fallback Vercel Cron
 
@@ -26,88 +26,37 @@ Live at: [redline.sanaullah.app](https://redline.sanaullah.app)
 
 ```text
 .
-├── .github/
-│   └── score-predictions.yml     # GitHub Actions workflow for scheduled scoring (every 30 min)
-├── app/                          # Next.js App Router root
-│   ├── actions/
-│   │   └── predictions.ts        # Server actions to save and fetch user predictions
+├── .github/workflows/score-predictions.yml  # Calls /api/cron-score every 30 minutes
+├── app/
+│   ├── actions/                  # Server actions: predictions (user) and admin (drivers, reference orders)
+│   ├── admin/                    # Admin dashboard per round (restricted by ADMIN_EMAILS)
 │   ├── api/
-│   │   ├── auth/
-│   │   │   └── [...all]/         # Better Auth route handlers
-│   │   ├── cron-score/
-│   │   │   └── route.ts          # Automated scoring route for all pending sessions
-│   │   └── score/
-│   │       └── route.ts          # Targeted scoring route with optional force-rescore support
-│   ├── calendar/
-│   │   └── page.tsx              # Filterable full-season Grand Prix calendar
-│   ├── leaderboard/
-│   │   └── page.tsx              # Championship leaderboard with podium and accuracy metrics
-│   ├── predict/
-│   │   └── [round]/
-│   │       └── page.tsx          # Prediction picker interface for race weekends
-│   ├── profile/
-│   │   └── [id]/
-│   │       └── page.tsx          # User stats, points by round, and session history
-│   ├── sign-in/
-│   │   └── page.tsx              # Authentication sign-in page
-│   ├── sign-up/
-│   │   └── page.tsx              # Authentication registration page
-│   ├── stats/
-│   │   └── page.tsx              # Season telemetry, global accuracy, and round totals
-│   ├── styles/                   # Modular CSS stylesheets
-│   │   ├── effects.css
-│   │   ├── header.css
-│   │   ├── home.css
-│   │   ├── mobile-menu.css
-│   │   └── stats.css
-│   ├── globals.css               # Tailwind CSS entrypoint and theme variables
-│   ├── layout.tsx                # Root layout with metadata and site header
-│   ├── loading.tsx               # Top-level loading state
-│   ├── not-found.tsx             # Custom 404 page
-│   └── page.tsx                  # Home page with upcoming race hero, stats, and calendar preview
-├── components/                   # Reusable UI components
-│   ├── ui/
-│   │   └── button.tsx            # Button primitive
-│   ├── auth-form.tsx             # Sign in and sign up form component
-│   ├── bar-chart.tsx             # CSS bar chart for round points distribution
-│   ├── countdown.tsx             # Dynamic session countdown timer
-│   ├── mobile-menu.tsx           # Responsive drawer navigation for mobile devices
-│   ├── nav-links.tsx             # Header navigation links with active state
-│   ├── prediction-picker.tsx     # DnD-kit sortable grid for ordering top 10 picks
-│   ├── race-calendar.tsx         # Interactive search and filterable race schedule
-│   ├── sign-out-button.tsx       # Auth sign-out control
-│   ├── site-header.tsx           # Global site navigation header
-│   └── stat-card.tsx             # Metric display cards
-├── drizzle/                      # Drizzle schema migrations and metadata
-│   ├── 0000_faithful_sunfire.sql
-│   ├── 0001_enable_rls.sql
-│   └── meta/
-├── lib/                          # Core application utilities and business logic
-│   ├── db/
-│   │   ├── index.ts              # PostgreSQL connection pool and Drizzle client
-│   │   └── schema.ts             # Database tables, relations, and types
-│   ├── auth.ts                   # Better Auth server configuration
-│   ├── auth-client.ts            # Better Auth client hooks and helpers
-│   ├── driver-mapping.ts         # Driver normalization, number/code mapping, and alias equivalence
-│   ├── f1.ts                     # Jolpica Ergast API fetching, schedule caching, and classification parsing
-│   ├── openf1.ts                 # OpenF1 session resolver and fallback classification parser
-│   ├── scoring.ts                # Scoring engine, session validation, and database updates
-│   ├── stats.ts                  # Standings calculation, user profiles, and season metrics
-│   └── utils.ts                  # Shared helper functions (clsx, twMerge)
-├── public/                       # Static public assets, icons, and brand graphics
-│   ├── images/brand/             # Official Redline logos and brand marks
-│   ├── icon.svg
-│   └── placeholder.svg
-├── supabase/
-│   └── config.toml               # Supabase configuration for local environments
-├── drizzle.config.ts             # Drizzle Kit configuration
-├── next.config.mjs               # Next.js configuration
-├── package.json                  # Project dependencies and run scripts
-├── pnpm-lock.yaml                # Lockfile for pnpm
-├── pnpm-workspace.yaml           # pnpm configuration settings
-├── postcss.config.mjs            # PostCSS configuration for Tailwind
-├── tsconfig.json                 # TypeScript compiler options
-└── vercel.json                   # Vercel deployment and cron configuration
+│   │   ├── auth/[...all]/        # Better Auth handler
+│   │   ├── cron-score/           # Scores all pending sessions
+│   │   └── score/                # Targeted scoring with optional force re-score
+│   ├── calendar/  leaderboard/  picks/  predict/[round]/  profile/[id]/  stats/
+│   ├── sign-in/  sign-up/  forgot-password/  reset-password/
+│   ├── styles/                   # Modular CSS (effects, header, home, stats, leaderboard, prediction, picks, calendar, admin)
+│   ├── template.tsx              # Per-navigation page transition
+│   └── layout.tsx                # Root layout, start-lights intro, analytics
+├── components/
+│   ├── auth-shell.tsx            # Shared layout for all auth pages
+│   ├── auth-form.tsx  forgot-password-form.tsx  reset-password-form.tsx  password-input.tsx
+│   ├── start-lights-intro.tsx    # Loading overlay shown on first load, reloads and page changes
+│   └── admin/ calendar/ leaderboard/ picks/ prediction/ stats/ ui/
+├── drizzle/                      # SQL migrations (see Database)
+├── lib/
+│   ├── auth.ts  auth-client.ts   # Better Auth server and client
+│   ├── mailer.ts                 # SMTP mailer and email templates
+│   ├── safe-next.ts              # Validates the ?next= redirect target
+│   ├── f1/                       # Schedule, drivers, official results (Jolpica)
+│   ├── openf1.ts                 # OpenF1 fallback
+│   ├── driver-mapping.ts         # Driver ID normalization across sources
+│   ├── scoring.ts  podiums.ts    # Scoring engine and round podiums
+│   ├── stats/                    # Standings, profiles, pick analytics
+│   └── db/                       # Pool, Drizzle client, schema
+├── scripts/                      # Circuit path generation, FastF1 bridge
+└── vercel.json                   # Daily fallback cron
 ```
 
 ---
@@ -120,7 +69,7 @@ The database is PostgreSQL hosted on Supabase and managed using Drizzle ORM.
 - `user`: User account details (`id`, `name`, `email`, `createdAt`, `updatedAt`).
 - `session`: Active sessions (`id`, `token`, `userId`, `expiresAt`).
 - `account`: Provider credentials and password hashes (`id`, `userId`, `providerId`, `password`).
-- `verification`: Tokens for account verification flows.
+- `verification`: Tokens for email verification and password reset.
 
 ### Domain Tables
 - **`predictions`**: Stores a player's top 10 picks for a specific session.
@@ -136,7 +85,7 @@ The database is PostgreSQL hosted on Supabase and managed using Drizzle ORM.
 
 ## Core Workflows
 
-### 1. Official Results & Dual-Source Fallback (`lib/f1.ts`, `lib/openf1.ts`, `lib/driver-mapping.ts`)
+### 1. Official Results & Dual-Source Fallback (`lib/f1/`, `lib/openf1.ts`, `lib/driver-mapping.ts`)
 The application requires verified, contiguous top 10 classifications before awarding any points:
 - **Jolpica Ergast API**: The primary source queried for race, qualifying, and sprint results.
 - **Strict Validation**: The raw API response is checked to ensure every position `1` through `10` is present, contiguous, and unique. Any payload containing missing positions, duplicate positions, mismatched position numbers, or incomplete qualifying times is rejected.
@@ -153,12 +102,21 @@ The application requires verified, contiguous top 10 classifications before awar
 ### 3. Scoring System (`lib/scoring.ts`, `app/api/cron-score/`, `app/api/score/`)
 - Once a session concludes, the official top 10 is fetched, normalized, and saved to `event_results`.
 - Predictions are evaluated index by index: 1 point is awarded for each driver predicted in the exact finishing position.
-- Sprint Qualifying predictions accept picks but award 0 points by design.
+- Sprint Qualifying is scored like every other session: 1 point per exact position.
+- A round's sessions are scored sequentially so the round podium is recomputed from complete totals.
 - **Scheduled Scoring**:
-  - GitHub Actions runs `.github/score-predictions.yml` every 30 minutes to trigger `/api/cron-score`.
+  - GitHub Actions runs `.github/workflows/score-predictions.yml` every 30 minutes to trigger `/api/cron-score`.
   - Vercel Cron runs daily as a secondary fallback.
 - **Targeted / Force Scoring**:
   - `/api/score?round=[round]&type=[sessionType]&force=true` can be called to score or re-score any session on demand. Both endpoints require a `Bearer <CRON_SECRET>` authorization header.
+
+---
+
+## Authentication
+
+- Email and password via Better Auth. With SMTP configured, sign-up requires email verification (links expire in 24 hours) and a sign-in attempt by an unverified user resends the link.
+- Forgot password at `/forgot-password`; reset links expire in 1 hour. Both pages are hidden when SMTP is not configured.
+- `?next=` returns users to the page they came from; only same-site paths are accepted.
 
 ---
 
@@ -170,9 +128,20 @@ Configure the following environment variables in `.env.local` for local developm
 # PostgreSQL connection string (Supabase transaction pooler recommended)
 DATABASE_URL="postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres"
 
-# Better Auth configuration
+# Better Auth configuration (BETTER_AUTH_URL must be the public site URL in production)
 BETTER_AUTH_URL="http://localhost:3000"
 BETTER_AUTH_SECRET="<32-byte-secure-random-string>"
+
+# Comma-separated emails allowed to use /admin
+ADMIN_EMAILS="you@example.com"
+
+# SMTP for email verification and password reset (Gmail app password, Brevo, etc.)
+# If unset, verification and reset are disabled and sign-up works without email.
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="465"
+SMTP_USER="you@gmail.com"
+SMTP_PASS="<app-password>"
+SMTP_FROM="Redline <you@gmail.com>"
 
 # Secret protecting the /api/cron-score and /api/score endpoints
 CRON_SECRET="<random-secure-string>"
@@ -204,6 +173,7 @@ CRON_SECRET="<random-secure-string>"
    ```bash
    npx drizzle-kit push
    ```
+6. **Existing databases:** run `drizzle/0002_verify_existing_users.sql` once before enabling SMTP so accounts created earlier can still sign in.
 
 ---
 
