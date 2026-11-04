@@ -69,7 +69,7 @@ function describeDriver(id: string, catalog: Map<string, Driver>) {
   }
 }
 
-export async function getUserWeekendPicks(userId: string): Promise<WeekendPicksGroup[]> {
+export async function getUserWeekendPicks(userId: string, options?: { scoredOnly?: boolean }): Promise<WeekendPicksGroup[]> {
   const [allPreds, allResults, schedule, catalog] = await Promise.all([
     getSeasonPredictions(),
     getSeasonEventResults(),
@@ -77,7 +77,7 @@ export async function getUserWeekendPicks(userId: string): Promise<WeekendPicksG
     getDriverCatalog(SEASON),
   ])
   const userPreds = allPreds
-    .filter((row) => row.userId === userId)
+    .filter((row) => row.userId === userId && (!options?.scoredOnly || row.scored))
     .sort((a, b) => b.round - a.round)
 
   const resultsMap = new Map<string, string[]>()

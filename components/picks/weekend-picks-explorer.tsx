@@ -20,11 +20,13 @@ export function WeekendPicksExplorer({
   focusedRound = null,
   heading = 'Weekend Picks',
   eyebrow = 'PREDICTION ARCHIVE',
+  emptyMessage,
 }: {
   weekends: WeekendPicksGroup[]
   focusedRound?: number | null
   heading?: string
   eyebrow?: string
+  emptyMessage?: string
 }) {
   const [selectedRound, setSelectedRound] = useState<number | 'all'>(
     focusedRound ?? (weekends[0]?.round ?? 'all')
@@ -48,7 +50,7 @@ export function WeekendPicksExplorer({
         </div>
         <div className="empty-grid">
           <History />
-          <p>No predictions submitted yet. Lock in your top 10 for the next Grand Prix weekend.</p>
+          <p>{emptyMessage ?? 'No predictions submitted yet. Lock in your top 10 for the next Grand Prix weekend.'}</p>
           <Link href="/calendar" className="button-primary">
             Browse calendar <ArrowRight />
           </Link>
