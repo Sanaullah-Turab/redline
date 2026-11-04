@@ -2,20 +2,22 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Eye, EyeOff, LoaderCircle, MailCheck } from 'lucide-react'
+import { ArrowRight, LoaderCircle, MailCheck } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
+import { AuthShell } from '@/components/auth-shell'
+import { PasswordInput } from '@/components/password-input'
 
-export function AuthForm({ mode, next = '/' }: { mode: 'sign-in' | 'sign-up'; next?: string }) {
+type Props = { mode: 'sign-in' | 'sign-up'; next?: string; canReset?: boolean; notice?: string }
+
+export function AuthForm({ mode, next = '/', canReset = false, notice }: Props) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
   const [sentTo, setSentTo] = useState('')
   const signUp = mode === 'sign-up'
-
   const query = next === '/' ? '' : `?next=${encodeURIComponent(next)}`
 
   async function submit(e: React.FormEvent) {
@@ -49,8 +51,8 @@ export function AuthForm({ mode, next = '/' }: { mode: 'sign-in' | 'sign-up'; ne
 
   if (sentTo) {
     return (
-      <main className="auth-shell">
-        <section className="auth-panel" role="status">
+      <AuthShell>
+        <div className="flex flex-col gap-4" role="status">
           <MailCheck className="size-10 text-primary" aria-hidden="true" />
           <h1 className="text-balance font-mono text-4xl font-black uppercase italic">Check your inbox</h1>
           <p className="text-muted-foreground">
@@ -59,114 +61,95 @@ export function AuthForm({ mode, next = '/' }: { mode: 'sign-in' | 'sign-up'; ne
           <button type="button" className="button-primary h-12" onClick={() => setSentTo('')}>
             Back
           </button>
-        </section>
-      </main>
+        </div>
+      </AuthShell>
     )
   }
 
   return (
-    <main className="auth-shell">
-      <section className="auth-panel">
-        <Link href="/" className="font-mono text-xl font-black italic tracking-wide">
-          <span className="text-white">RED</span>
-          <span className="text-primary">LINE</span>
-        </Link>
-        <div className="flex flex-col gap-2">
-          <p className="eyebrow">2026 PREDICTION CHAMPIONSHIP</p>
-          <h1 className="text-balance font-mono text-4xl font-black uppercase italic">
-            {signUp ? 'Join the grid' : 'Back on track'}
-          </h1>
-          <p className="text-muted-foreground">
-            {signUp
-              ? 'Create your profile and start making picks.'
-              : 'Sign in to manage your race weekend predictions.'}
-          </p>
-        </div>
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          {signUp && (
-            <label className="field">
-              Display name
-              <input
-                id="auth-name"
-                name="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                autoComplete="name"
-              />
-            </label>
-          )}
+    <AuthShell>
+      <div className="flex flex-col gap-2">
+        <p className="eyebrow">2026 PREDICTION CHAMPIONSHIP</p>
+        <h1 className="text-balance font-mono text-4xl font-black uppercase italic">
+          {signUp ? 'Join the grid' : 'Back on track'}
+        </h1>
+        <p className="text-muted-foreground">
+          {signUp
+            ? 'Create your profile and start making picks.'
+            : 'Sign in to manage your race weekend predictions.'}
+        </p>
+      </div>
+      {notice && (
+        <p role="status" className="auth-notice">
+          {notice}
+        </p>
+      )}
+      <form onSubmit={submit} className="flex flex-col gap-4">
+        {signUp && (
           <label className="field">
-            Email address
+            Display name
             <input
-              id="auth-email"
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="auth-name"
+              name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
-              aria-invalid={Boolean(error)}
-              aria-describedby={error ? 'auth-error' : undefined}
-              autoComplete="email"
+              autoComplete="name"
             />
           </label>
-          <label className="field">
+        )}
+        <label className="field">
+          Email address
+          <input
+            id="auth-email"
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? 'auth-error' : undefined}
+          />
+        </label>
+        <label className="field">
+          <span className="flex items-center justify-between">
             Password
-            <span className="relative flex">
-              <input
-                id="auth-password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                autoComplete={signUp ? 'new-password' : 'current-password'}
-                aria-invalid={Boolean(error)}
-                aria-describedby={error ? 'auth-error' : undefined}
-                className="w-full pr-12"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                aria-pressed={showPassword}
-                className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted-foreground hover:text-foreground"
-              >
-                {showPassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
-              </button>
-            </span>
-          </label>
-          {error && (
-            <p id="auth-error" role="alert" aria-live="assertive" className="text-sm text-destructive">
-              {error}
-            </p>
-          )}
-          <button className="button-primary h-12" disabled={loading}>
-            {loading ? (
-              <LoaderCircle className="animate-spin" aria-label="Loading" />
-            ) : (
-              <>
-                {signUp ? 'Create account' : 'Sign in'}
-                <ArrowRight aria-hidden="true" />
-              </>
+            {!signUp && canReset && (
+              <Link href={`/forgot-password${query}`} className="text-foreground underline">
+                Forgot password?
+              </Link>
             )}
-          </button>
-        </form>
-        <p className="text-sm text-muted-foreground">
-          {signUp ? 'Already racing? ' : 'New to Redline? '}
-          <Link className="font-bold text-foreground underline" href={`${signUp ? '/sign-in' : '/sign-up'}${query}`}>
-            {signUp ? 'Sign in' : 'Create account'}
-          </Link>
-        </p>
-      </section>
-      <aside className="auth-art" aria-hidden="true">
-        <div className="speed-lines" />
-        <p className="font-mono text-8xl font-black italic text-primary">1</p>
-        <p className="max-w-sm text-3xl font-bold text-primary-foreground">
-          Every position. Every point. Every race.
-        </p>
-      </aside>
-    </main>
+          </span>
+          <PasswordInput
+            value={password}
+            onChange={setPassword}
+            autoComplete={signUp ? 'new-password' : 'current-password'}
+            invalid={Boolean(error)}
+          />
+        </label>
+        {error && (
+          <p id="auth-error" role="alert" aria-live="assertive" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <button className="button-primary h-12" disabled={loading}>
+          {loading ? (
+            <LoaderCircle className="animate-spin" aria-label="Loading" />
+          ) : (
+            <>
+              {signUp ? 'Create account' : 'Sign in'}
+              <ArrowRight aria-hidden="true" />
+            </>
+          )}
+        </button>
+      </form>
+      <p className="text-sm text-muted-foreground">
+        {signUp ? 'Already racing? ' : 'New to Redline? '}
+        <Link className="font-bold text-foreground underline" href={`${signUp ? '/sign-in' : '/sign-up'}${query}`}>
+          {signUp ? 'Sign in' : 'Create account'}
+        </Link>
+      </p>
+    </AuthShell>
   )
 }
